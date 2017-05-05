@@ -1,0 +1,7 @@
+command=start_social_import
+#fromdate=2016-12-13
+#todate=2016-12-30
+# set pull window to slightly more than a day 
+timewindowsec=100000
+# set history cache to 7 days
+historywindowsec=604800

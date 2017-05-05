@@ -1,0 +1,4 @@
+command=start_jdbc_import
+fromdate=2016-12-13
+todate=2016-12-30
+timewindowsec=86400
