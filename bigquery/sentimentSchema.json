@@ -1,0 +1,161 @@
+[
+    {
+        "mode": "REQUIRED",
+        "name": "SentimentHash",
+        "type": "STRING",
+		"description": "ID of the Sentiment record, calculated as to_base64(sha1(text + web resource UrlHash))"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "DocumentHash",
+        "type": "STRING",
+		"description": "ID of the containing document"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "DocumentTime",
+        "type": "TIMESTAMP",
+		"description": "Timestamp of the document creation. Same as PublicationTime in WebResource"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "DocumentDateId",
+        "type": "INTEGER",
+		"description": "Date of the document creation. Also, partition date for this table. Same as PublicationDateId in WebResource"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "Text",
+        "type": "STRING",
+		"description": "The text of the sentiment"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "LabelledPositions",
+        "type": "STRING",
+		"description": "Serialized list of positions in text labeled with emotions and entities"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "AnnotatedText",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "AnnotatedHtml",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "SentimentTotalScore",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "DominantValence",
+        "type": "INTEGER",
+		"description": "0: positive, 1:negative, 2:ambiguous, 3:zero, 4: general"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StAcceptance",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StAnger",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StAnticipation",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StAmbiguous",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StDisgust",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StFear",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StGuilt",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StInterest",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StJoy",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StSadness",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StShame",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StSurprise",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StPositive",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StNegative",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StSentiment",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StProfane",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StUnsafe",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "REPEATED",
+        "name": "Tags",
+        "type": "RECORD",
+        "fields": [
+            {
+                "mode": "NULLABLE",
+                "name": "Tag",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "GoodAsTopic",
+                "type": "BOOLEAN"
+            }
+        ]
+    }
+]

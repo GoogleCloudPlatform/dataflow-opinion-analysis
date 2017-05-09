@@ -1,0 +1,26 @@
+Title=Expanding Fact Checking at Google
+Author=Richard Gingras
+PubTime=2017-02-15 09:00:00
+Url=https://blog.google/topics/journalism-news/expanding-fact-checking-google/
+Language=EN
+
+Over the years we’ve heard from Google News users that our efforts to label stories ranging from local to satire to user-generated have helped expand their view of what is happening in the world. Last October we added a new Fact Check tag to help people find news stories that have been fact checked, so they can understand the value of what they’re reading. Soon after, we introduced the tag in France and Germany.
+
+Starting today, people in Brazil, Mexico and Argentina can see fact check tagged articles in the expanded story box on news.google.com and in the Google News & Weather iOS and Android apps.
+
+Fact Check in Brazil
+We’re also launching the fact check tag in these countries on news mode in Search. That means if you do a regular search and click the news tab, fact check articles will be elevated and annotated with the same fact check label that you would see in stories on Google News.
+
+Fact Check in news mode in Search
+We’re able to do this work because the fact check industry itself has grown—there are now more than 120 organizations involved in tackling this issue—but our commitment to this area is not new. In Europe over the last couple of years we’ve been working with publishers on a number of efforts focused on fact checking. Last week, we announced CrossCheck, a joint project involving nearly 20 French newsrooms and the First Draft Coalition to debunk myths pertaining to the upcoming French elections.
+
+In addition, as part of the Digital Initiative Fund, we’ve provided support for more than 10 projects looking at fact checking and authentication, adding six new initiatives at the end of last year:
+
+U.K.-based Full Fact is building an automated fact-checker tailored for journalists.
+Scotland’s the Ferret is using funding to build up a formal fact checking operation in their newsroom in the wake of the EU referendum.
+Factmata, developed at University College London and University of Sheffield, will use machine learning to build tools to help readers better understand claims made in digital media content, such as news articles and political speech transcripts.
+In Italy, Catchy’s team of scientists and media analysts, has created Compass, a fact checking platform to call out misleading stories, rebut bad facts and connect news events to reliable information.
+In France, Le Monde’s 13-person fact checking unit called Les Décodeurs has received funding for their Hoaxbuster Decodex project.
+Norway’s ambitious Leserkritikk (“Reader Critic”) project, currently running its prototype on Dagbladet.no, lets readers give specific and structured feedback on facts, language and mistakes in published content. 
+
+These projects clearly illustrate a desire for more of this work, and we’re eager to bring the fact check tag to other countries around the world. In order to make this a reality, we need your help. Publishers who would like to see their work appear with the Fact Check tag should use the open ClaimReview schema from schema.org in their stories.  Adding this markup allows Google to find these stories and highlight the fact checking work that has gone into them.  For more information, head on over to our help center.

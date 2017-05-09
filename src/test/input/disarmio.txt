@@ -1,0 +1,42 @@
+Title=How maps and machine learning are helping to eliminate malaria
+Author=Allie Lieber
+PubTime=2017-04-25 13:00:00
+Url=https://blog.google/products/maps/how-maps-and-machine-learning-are-helping-eliminate-malaria/
+Language=EN
+
+
+Today is World Malaria Day, a moment dedicated to raising awareness and improving access to tools to prevent malaria. The World Health Organization says nearly half of the world’s population is at risk for malaria, and estimates that in 2015 there were 212 million malaria cases resulting in 429,000 deaths. In places with high transmission rates, children under five account for 70 percent of malaria deaths.
+
+DiSARM (Disease Surveillance and Risk Monitoring), a project led by the Malaria Elimination Initiative and supported by the Bill and Melinda Gates Foundation and Clinton Health Access Initiative, is fighting the spread of malaria by mapping the places where malaria could occur. With the help of Google Earth Engine, DiSARM creates high resolution “risk maps” that help malaria control programs identify the areas where they should direct resources for prevention and treatment.
+
+We sat down with Hugh Sturrock, who leads the DiSARM project and is an Assistant Professor of Epidemiology and Biostatistics in the University of California, San Francisco’s Global Health Group, to learn more about DiSARM’s fight against malaria, and how Google fits in.
+
+As an epidemiologist, why did you choose to focus your efforts on malaria?
+
+I first became interested in 2005, during my undergraduate days at the University of Edinburgh when I worked on a project examining the fungal control of mosquitoes with Professor Andrew Read. I suddenly realized that my research could have a positive impact on people’s lives and from that point on I was hooked. While malaria deaths have decreased dramatically since then, it’s still a huge public health problem.
+
+Which regions is DiSARM targeting first?
+
+We’re piloting DiSARM in Swaziland and Zimbabwe, two regions that are on the cusp of malaria elimination. Between 2000–2014, reported malaria cases in Swaziland decreased by 99 percent, and in 2015, Swaziland reported fewer than 400 local cases. Meanwhile, Zimbabwe achieved a 74 percent decline in reported cases from 2005–2015.
+
+When a small number of cases in a region remain, precise intervention is required to fully eliminate malaria, and DiSARM can help fully close the gap. By focusing our resources more strategically, we can shrink the malaria map and eliminate the disease entirely in these countries.
+
+How does DiSARM use Google Earth Engine to help fight malaria?
+
+If we map where malaria is most likely to occur, we can target those areas for action. Every time someone is diagnosed with malaria in Swaziland and Zimbabwe, a team goes to the village where the infection occurred and collects a GPS point with the precise infection location. Just looking at these points won’t allow you to accurately determine the risk of malaria, though. You also need satellite imagery of conditions like rainfall, temperature, slope and elevation, which affect mosquito breeding and parasite development.
+GeoForGood_Disarm_800px_V2.gif
+To determine the risk of malaria, DiSARM combines the precise location of the malaria infection,  with satellite data of conditions like rainfall, temperature, vegetation, elevation, which affect mosquito breeding. DiSARM’s mobile app can be used by the malaria programs and field teams to target interventions.
+
+Google Earth Engine collects and organizes the public satellite imagery data we need. In the past we had to obtain those images from a range of sources: NASA, USGS and different universities around the world. But with Google Earth Engine, it’s all in one place and can be processed using Google computers. We combine satellite imagery data from Google Earth Engine with the locations of malaria cases collected by a country’s national malaria control program, and create models that let us generate maps identifying areas at greatest risk.
+
+The DiSARM interface gives malaria programs a near real-time view of malaria and predicts risk at specific locations, such as health facility service areas, villages and schools. Overlaying data allows malaria control programs to identify high-risk areas that have insufficient levels of protection and better distribute their interventions.
+How are the risk maps used?
+
+The Swaziland and Zimbabwe national malaria control programs use risk maps to help track progress and make decisions about how best to use their resources—for example, where to spray insecticides and where to conduct health promotion campaigns. With this data, they can make these decisions in a matter of minutes, rather than days or weeks. And they have much more precise information about where to target their efforts. They can drill down and direct their spray teams to go to the individual houses most at risk. This technique improves the targeting of interventions, saving money and time for the malaria programs.
+
+DiSARM’s targeting module uses the risk map to prioritize areas for interventions such as indoor residual spraying (IRS), insecticide treated nets (ITNs) and mass drug administration (MDA).
+We’ve also developed a mobile app with instructions for field teams and the locations of buildings they need to target on an offline map. They can also use the app to collect data even if they don’t have connectivity while they’re in remote locations.
+
+What’s next for DiSARM?
+
+Over the next year, we’re planning to expand the platform to show not just the current malaria risk, but a forecast for the future. We believe Swaziland and Zimbabwe can eliminate malaria and we hope this tool can get them—and other countries—closer to achieving that goal. To learn more, visit disarm.io.

@@ -1,0 +1,102 @@
+[
+    {
+        "mode": "REQUIRED",
+        "name": "DocumentHash",
+        "type": "STRING",
+		"description": "ID of the Document record, calculated as to_base64(sha1(PublicationTime + Text))"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "PublicationTime",
+        "type": "TIMESTAMP"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "PublicationDateId",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "ProcessingTime",
+        "type": "TIMESTAMP"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "ProcessingDateId",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "DocumentCollectionId",
+        "type": "STRING",
+		"description" : "ID of the source document collection, if known."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "CollectionItemId",
+        "type": "STRING",
+		"description" : "Original ID in the source document collection, if known."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Title",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Type",
+        "type": "INTEGER",
+		"description": "Unknown (0), Shorttext (1) (includes tweets, comments), Article (2) (includes blog posts, news site articles). Only important to distinguish, because people tend to express opinions differently when they have little space"
+		
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Language",
+        "type": "STRING",
+		"description": "String (EN for english, UN for unknown)"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "ParseDepth",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "ContentLength",
+        "type": "INTEGER",
+		"description": "Length of text in characters"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Author",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Text",
+        "type": "STRING"
+    },
+    {
+        "mode": "REPEATED",
+        "name": "Tags",
+        "type": "RECORD",
+        "fields": [
+            {
+                "mode": "NULLABLE",
+                "name": "Tag",
+                "type": "STRING"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "Weight",
+                "type": "FLOAT"
+            },
+            {
+                "mode": "NULLABLE",
+                "name": "GoodAsTopic",
+                "type": "BOOLEAN"
+            }
+			
+        ]
+    }
+]

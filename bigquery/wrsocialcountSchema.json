@@ -1,0 +1,44 @@
+[
+    {
+        "mode": "REQUIRED",
+        "name": "WebResourceHash",
+        "type": "STRING",
+		"description" : "The ID of the web resource, calculated as to_base64(sha1(PublicationTime + Url))"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "WrPublicationDateId",
+        "type": "INTEGER",
+		"description": "Integer in the format YYYYMMDD. Also, partition key"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "CountTime",
+        "type": "TIMESTAMP",
+		"description": "When the counts were computed"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "DocumentCollectionId",
+        "type": "STRING",
+		"description" : "ID of the source document collection, if known."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "CollectionItemId",
+        "type": "STRING",
+		"description" : "Original ID in the source document collection, if known."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "FbCount",
+        "type": "INTEGER",
+		"description": "Number of Facebook Shares"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "TwCount",
+        "type": "INTEGER",
+		"description": "Number of Twitter RTs"
+    }
+]

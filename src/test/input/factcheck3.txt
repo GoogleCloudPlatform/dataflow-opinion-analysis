@@ -1,0 +1,17 @@
+Title=Fact Check now available in Google Search and News around the world
+Author=Justin Kosslyn
+PubTime=2017-04-07 09:00:00
+Url=https://blog.google/products/search/fact-check-now-available-google-search-and-news-around-world/
+Language=EN
+
+Google was built to help people find useful information by surfacing the great content that publishers and sites create. This access to high quality information is what drives people to use the web and for contributors to continue to engage and invest in it.
+
+However, with thousands of new articles published online every minute of every day, the amount of content confronting people online can be overwhelming.  And unfortunately, not all of it is factual or true, making it hard for people to distinguish fact from fiction. That’s why last October, along with our partners at Jigsaw, we announced that in a few countries we would start enabling publishers to show a “Fact Check” tag in Google News for news stories. This label identifies articles that include information fact checked by news publishers and fact-checking organizations.
+
+After assessing feedback from both users and publishers, we’re making the Fact Check label in Google News available everywhere, and expanding it into Search globally in all languages. For the first time, when you conduct a search on Google that returns an authoritative result containing fact checks for one or more public claims, you will see that information clearly on the search results page. The snippet will display information on the claim, who made the claim, and the fact check of that particular claim.
+
+This information won’t be available for every search result, and there may be search result pages where different publishers checked the same claim and reached different conclusions. These fact checks are not Google’s and are presented so people can make more informed judgements. Even though differing conclusions may be presented, we think it’s still helpful for people to understand the degree of consensus around a particular claim and have clear information on which sources agree. As we make fact checks more visible in Search results, we believe people will have an easier time reviewing and assessing these fact checks, and making their own informed opinions.
+
+For publishers to be included in this feature, they must be using the Schema.org ClaimReview markup on the specific pages where they fact check public statements (documentation here), or they can use the Share the Facts widget developed by the Duke University Reporters Lab and Jigsaw. Only publishers that are algorithmically determined to be an authoritative source of information will qualify for inclusion. Finally, the content must adhere to the general policies that apply to all structured data markup, the Google News Publisher criteria for fact checks, and the standards for accountability and transparency, readability or proper site representation as articulated in our Google News General Guidelines. If a publisher or fact check claim does not meet these standards or honor these policies, we may, at our discretion, ignore that site's markup.
+
+This effort wouldn’t be possible without the help of other organizations and the fact check community, which has grown to 115 organizations. To find out more about this new feature, visit the Help Center.

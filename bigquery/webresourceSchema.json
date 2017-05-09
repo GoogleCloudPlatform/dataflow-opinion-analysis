@@ -1,0 +1,72 @@
+[
+    {
+        "mode": "REQUIRED",
+        "name": "WebResourceHash",
+        "type": "STRING",
+		"description" : "The ID of the web resource, calculated as to_base64(sha1(PublicationTime + Url))"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Url",
+        "type": "STRING",
+		"description": "Full URL of the resource, preferably normalized and stripped of unnecessary query parameters" 
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "PublicationTime",
+        "type": "TIMESTAMP",
+		"description": "When the resource was published. If unable to determine from metadata, ProcessingTime will be used"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "PublicationDateId",
+        "type": "INTEGER",
+		"description": "Integer in the format YYYYMMDD. Also, partition key"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "ProcessingTime",
+        "type": "TIMESTAMP",
+		"description": "When we became aware and processed the webresource. Typically only useful if we can't determine PublicationTime"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "ProcessingDateId",
+        "type": "INTEGER",
+		"description": "Integer in the format YYYYMMDD"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "DocumentHash",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "DocumentCollectionId",
+        "type": "STRING",
+		"description" : "ID of the source document collection, if known."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "CollectionItemId",
+        "type": "STRING",
+		"description" : "Original ID in the source document collection, if known."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Title",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Domain",
+        "type": "STRING",
+		"description": "Domain of URL"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Author",
+        "type": "STRING",
+		"description": "Person who claims authorship of the resource, if we can determine it"
+    }
+]

@@ -1,0 +1,13 @@
+Title=Labeling fact-check articles in Google News
+Author=Richard Gingras
+PubTime=2016-10-13 09:00:00
+Url=https://blog.google/topics/journalism-news/labeling-fact-check-articles-google-news/
+Language=EN
+
+Over the last several years, fact checking has come into its own. Led by organizations like the International Fact-Checking Network, rigorous fact checks are now conducted by more than 100 active sites, according to the Duke University Reporter’s Lab. They collectively produce many thousands of fact-checks a year, examining claims around urban legends, politics, health, and the media itself.
+
+In the seven years since we started labeling types of articles in Google News (e.g., In-Depth, Opinion, Wikipedia), we’ve heard that many readers enjoy having easy access to a diverse range of content types. Earlier this year, we added a “Local Source” Tag to highlight local coverage of major stories. Today, we’re adding another new tag, “Fact check,” to help readers find fact checking in large news stories. You’ll see the tagged articles in the expanded story box on news.google.com and in the Google News & Weather iOS and Android apps, starting with the U.S. and the U.K.
+
+Google News determines whether an article might contain fact checks in part by looking for the schema.org ClaimReview markup. We also look for sites that follow the commonly accepted criteria for fact checks. Publishers who create fact-checks and would like to see it appear with the “Fact check” tag should use that markup in fact-check articles. For more information, head on over to our help center.
+
+We’re excited to see the growth of the Fact Check community and to shine a light on its efforts to divine fact from fiction, wisdom from spin.

@@ -1,0 +1,38 @@
+Title=How we stop fraudulent apps from holding you ransom
+Author=Jason Woloz
+PubTime=2017-03-28 09:00:00
+Url=https://blog.google/topics/safety-security/how-we-stop-fraudulent-apps-holding-you-ransom/
+Language=EN
+
+
+Recently we shared our 2016 Android Security Year in Review, which looks at how we protect Android users and their data. Today, we're taking a closer look at how we shield people from a rare—but particularly disruptive—potentially harmful app (PHA) known as ransomware. We’ve long had protections from ransomware in Android, and we added new ones in Nougat as well.
+
+Ransomware is a type of app that restricts access to your device until a sum of money is paid. Ransomware usually presents itself in one of two forms: apps that restrict access to your device and then demand payment to regain access to the device, or apps that encrypt data on the device’s external storage (such as an SD card) and then demand payment to decrypt your data. To make the scam more convincing, fraudsters sometimes pretend to be from a credible law enforcement agency and accuse you of doing something illegal so you’re more likely to pay.
+
+Although ransomware has begun to target mobile devices, it’s still rare: Since 2015, less than 0.00001 percent of installations from Google Play, and less than .01 percent of installations from sources other  than Google Play, were categorized as ransomware.  (That's less than the odds of getting struck by lightning twice in your lifetime!).
+
+
+Some examples of popular ransomware
+And Android users have long been protected from ransomware. Our Google Play policies strictly prohibit apps that contain it, and if we ever detect these scams, we rapidly take action. Verify Apps, our security system that analyzes apps before they are installed and then regularly checks more than 400 million devices and 6 billion apps everyday for PHAs, is another safeguard. And Application Sandboxing, a technology that forces each app to operate independently of others, provides another layer of defense. Sandboxes require apps to mutually consent to sharing data, a protection which limits ransomware’s ability to access sensitive information like a contact list from another app.
+
+
+Ransomware protections in Android Nougat
+With the release of Android 7.0 Nougat, we added to existing defenses against ransomware, and also made some changes to address some of the newer tactics of ransomware scams. Here are a few examples:
+
+Safety blinders: Apps can no longer see which other apps are active. That means scammy ones can’t see what other apps are doing—and can’t inform their attacks based on activity.
+Even stronger locks: If you set a lockscreen PIN prior to installing ransomware, ransomware can’t misuse your device’s permissions to change your PIN and lock you out.
+Whacking clickjacking: “Clickjacking” tricks people into clicking something, often by obscuring permission dialogs behind other windows. You’re now protected from ransomware attacks that use this tactic to sneakily gain control of a device.
+Protecting your data and device from ransomware
+
+Even with all the safeguards we’ve built into Android and Google Play to protect you from ransomware, there are still a few things that you can do to keep your device safe. 
+
+Only download apps from a trustworthy source, such as Google Play.
+Ensure Verify Apps is enabled.
+Install security updates and always ensure your device is updated to the latest version to get the best security protection.
+Back up your device.
+Be cautious. Take a moment to read reviews and other information about apps before installing, to make sure you download the app you’re looking for.
+If you accidentally install ransomware on your phone, you have a few options. First, you can try to boot into safe mode. Starting your device in safe mode means your device only has the original software and apps that came with it. If an app is misbehaving but the issues go away in safe mode, the problem is probably caused by a third-party app downloaded on your device. If you can boot into safe mode, try to uninstall the app and then reboot the device. On a Pixel, you can get into safe mode with a keyboard combination that PHAs can't touch.
+
+If safe mode doesn’t work, then you might have to reset your phone to factory settings. Many devices running Android allow you to remove dangerous apps by resetting it to factory settings (also referred to as formatting the device, or doing a "hard reset"). This should be your last resort, but if you’ve backed up your files, resetting your device should be easy. Check with your carrier or device manufacturer for instructions on how to reset your phone.
+
+Ransomware on Android is exceedingly rare. Still, we’ve implemented lots of new protections in Nougat, and we continue to improve on the defenses that have long been in place. Those protections, along with extra vigilance about how you download your apps, will help keep you and your device secure.

@@ -10,7 +10,7 @@ automated testimonial harvesting.
 
 This sample contains three components:
 
-* A task orchestrator, built using Google App Engine Cron Service, Google Cloud Pub/Sub control topic and Google Cloud Dataflow in streaming mode
+* A task scheduler, built using Google App Engine Cron Service, Google Cloud Pub/Sub control topic and Google Cloud Dataflow in streaming mode
 * Cloud Dataflow pipelines for importing bounded (batch) raw data from sources such as relational Google Cloud SQL databases (MySQL or PostgreSQL, via the JDBC connector) and files in Google Cloud Storage
 * Additional ETL transformations in BigQuery enabled via Cloud Dataflow and embedded SQL statements
 
@@ -25,6 +25,8 @@ The overview for configuring and running this sample is as follows:
 
 ### Prerequisites
 
+Setup your Google Cloud Platform project and permissions
+
 * Select or Create a Google Cloud Platform project.
   In the [Google Cloud Console](https://console.cloud.google.com/project), select
   **Create Project**.
@@ -33,16 +35,11 @@ The overview for configuring and running this sample is as follows:
 
 * [Enable](https://console.cloud.google.com/flows/enableapi?apiid=dataflow,compute_component,logging,storage_component,storage_api,bigquery,pubsub,datastore) the Google Dataflow, Compute Engine, Google Cloud Storage, and other APIs necessary to run the example. 
 
-* [Create a Cloud Storage bucket](https://console.cloud.google.com/storage/browser) for your project. 
-
-Install git, Google Cloud SDK, Python (for orchestration scripts), Java and Maven (for Dataflow pipelines), if not already on your system:
+Install tools necessary for compiling and deploying the code in this sample, if not already on your system, specifically git, Google Cloud SDK, Python (for orchestration scripts), Java and Maven (for Dataflow pipelines):
 
 * Install [`git`](https://git-scm.com/downloads).
 
 * [Download and install the Google Cloud SDK](http://cloud.google.com/sdk/).
-
-* Authenticate with the Cloud Platform. Run the following command to get [Application Default Credentials](https://developers.google.com/identity/protocols/application-default-credentials).
-  `gcloud auth application-default login`
 
 * Install [Python 2.7](https://www.python.org/download/releases/2.7/).
 
@@ -51,6 +48,30 @@ Install git, Google Cloud SDK, Python (for orchestration scripts), Java and Mave
 * Download and install the [Java Development Kit (JDK)](http://www.oracle.com/technetwork/java/javase/downloads/index.html) version 1.8 or later. Verify that the JAVA_HOME environment variable is set and points to your JDK installation.
 
 * [Download](http://maven.apache.org/download.cgi) and [install](http://maven.apache.org/install.html) Apache Maven.
+
+
+Create and setup a Cloud Storage bucket and Cloud Pub/Sub topics
+
+* [Create a Cloud Storage bucket](https://console.cloud.google.com/storage/browser) for your project. This bucket will be used for staging your code, as well as for temporary input/output files. For consistency with this sample, select Multi-Regional storage class and United States location.
+
+* Create folders in this bucket `staging`, `input`, `output`, `temp`, `indexercontrol`
+
+* [Create](https://console.cloud.google.com/cloudpubsub/topicList) the following Pub/Sub topics: `indexercommands`, `documents`
+
+Create or verify a configuration for your project
+
+* Authenticate with the Cloud Platform. Run the following command to get [Application Default Credentials](https://developers.google.com/identity/protocols/application-default-credentials).
+
+  `$ gcloud auth application-default login`
+
+* Create a new configuration for your project if it does not exist already
+
+  `$ gcloud init`
+
+* Verify your configurations
+
+  `$ gcloud config configurations list`
+
 
 Important: This tutorial uses several billable components of Google Cloud
 Platform. New Cloud Platform users may be eligible for a [free trial](http://cloud.google.com/free-trial).
@@ -61,76 +82,120 @@ Platform. New Cloud Platform users may be eligible for a [free trial](http://clo
 
 To clone the GitHub repository to your computer, run the following command:
 
-    $ git clone https://github.com/GoogleCloudPlatform/df-opinion-analysis
+```
+git clone https://github.com/GoogleCloudPlatform/dataflow-opinion-analysis
+```
 
 Change directories to the `df-opinion-analysis` directory. The exact path
 depends on where you placed the directory when you cloned the sample files from
 GitHub.
 
-    $ cd df-opinion-analysis
+```
+cd dataflow-opinion-analysis
+```
 
-### Specify cron jobs
+### Specify cron jobs for the App Engine scheduling  app
 
-App Engine Cron Service job descriptions are specified in `scheduler/cron.yaml`, a file in
-the App Engine application. You define tasks for App Engine Task Scheduler
-in [YAML format](http://yaml.org/). The following example
-shows the syntax.
+* In the [App Engine Console](https://console.cloud.google.com/appengine) create an App Engine app
 
-    cron:
-      - description: <description of the job>
-               url: /events/<topic name to publish to>
-               schedule: <frequency in human-readable format>
+* In shell, activate the configuration for the project where you want to deploy the app 
 
-For a complete description of how to use YAML to specify jobs for Cron Service,
-including the schedule format, see
-[Scheduled Tasks with Cron for Python](https://cloud.google.com/appengine/docs/python/config/cron#Python_app_yaml_The_schedule_format).
+  `$ gcloud config configurations activate <config-name>`
 
-Leave the default cron.yaml as is for now to run through the sample.
+* Include the Python API client in your App Engine app
 
-### Upload the orchestration application to App Engine
+  `$ pip install -t scheduler/lib/ google-api-python-client`
+  
+* Adjust the schedule for your ETL jobs and edit the `scheduler/cron.yaml` file. You define tasks for App Engine Task Scheduler in [YAML format](http://yaml.org/). For a complete description of how to use YAML to specify jobs for Cron Service, including the schedule format, see [Scheduled Tasks with Cron for Python] (https://cloud.google.com/appengine/docs/python/config/cron#Python_app_yaml_The_schedule_format).
 
-In order for the App Engine application to schedule and relay your events,
-you must upload it to a Developers Console project. This is the project
-that you created in **Prerequisites**.
+* Update the control topic name `indexercommands` in the scheduler scripts to the name you used when you created the Pub/Sub topic. Edit the following files:
+	scheduler/startjdbcimport.py
+	scheduler/startsocialimport.py
+	scheduler/startstatscalc.py
 
-1. Configure the `gcloud` command-line tool to use the project you created in
-    Prerequisites.
+* Upload the scheduling application to App Engine.  
 
-        $ gcloud config set project <your-project-id>
+  `gcloud app deploy --version=1 scheduler/app.yaml scheduler/cron.yaml`
 
-    Where you replace `<your-project-id>`  with the identifier of your cloud
-    project.
-
-2. Include the Python API client in your App Engine application.
-
-        $ pip install -t scheduler/lib/ google-api-python-client
-
-    Note: if you get an error and used Homebrew to install Python on OS X,
-    see [this fix](https://github.com/Homebrew/homebrew/blob/master/share/doc/homebrew/Homebrew-and-Python.md#note-on-pip-install---user).
-
-3. Create an App Engine application either in the CLI or in the Developer Console
-
-		$ gcloud beta app create
-
-4. Deploy the application to App Engine.
-
-        $ gcloud app deploy --version=1 scheduler/app.yaml \
-          scheduler/cron.yaml
-
-After you deploy the App Engine application it uses the App Engine Cron Service
+After you deploy the App Engine application, it uses the App Engine Cron Service
 to schedule sending messages to the Cloud Pub/Sub control topics. If the control Cloud Pub/Sub topic
 specified in your Python scripts (e.g. `startjdbcimport.py`) does not exist, the application creates it.
 
-You can see the cron jobs under in the console under:
+You can see the cron jobs under in the Cloud Console under:
 
-Compute > App Engine > Task queues > Cron Jobs
+  Compute > App Engine > Task queues > Cron Jobs
 
-You can also see the auto-created topic (after about a minute) in the console:
+You can also see the control topic in the Cloud Console:
 
-Big Data > Pub/Sub
+  Big Data > Pub/Sub
+
+
+### Create the BigQuery dataset
+
+* Make sure you've activated the gcloud configuration for the project where you want to create your BigQuery dataset
+
+  `gcloud config configurations activate <config-name>`
+
+* In shell, go to the `bigquery` directory where the build scripts and schema files for BigQuery tables and views are located
+
+  `cd bigquery`
+
+* Run the `build_dataset.sh` script to create the dataset, tables, and views. The script will use the PROJECT_ID variable from your active gcloud configuration, and create a new dataset in BigQuery named 'opinions'. In this dataset it will create several tables and views necessary for this sample.
+
+  `./build_dataset.sh`
+
+* [optional] Later on, if you make changes to the table schema or views, you can update the definitions of these objects by running update commands:
+
+  `./build_tables.sh update`
+  
+  `./build_views.sh update`
+
+Table schema definitions are located in the *Schema.json files in the `bigquery` directory. View definitions are located in the shell script build_views.sh.
 
 ### Deploy the Dataflow pipelines
 
+
+#### [Optional] Download and install the Sirocco sentiment analysis packages
+
+If you would like to employ this sample to analyze text and find opinions, download and install [Sirocco](https://github.com/datancoffee/sirocco), a framework maintained by [Sergei Sokolenko](https://medium.com/@datancoffee).
+
+* Download the [Sirocco Java framework](https://github.com/datancoffee/sirocco/releases/download/v1.0.0/sirocco-sa-1.0.0.jar) jar file.
+
+* Download the [Sirocco model](https://gist.github.com/datancoffee/4df233243723ab00874192257687f32c/raw/c652516fe451556b6c6cf60214333ecd736a421b/sirocco-mo-1.0.0.jar) file.
+
+* Go to the directory where the downloaded sirocco-sa-1.0.0.jar and sirocco-mo-1.0.0.jar files are located.
+
+* Install the Sirocco framework in your local Maven repository
+
+```
+mvn install:install-file \
+  -DgroupId=sirocco.sirocco-sa \
+  -DartifactId=sirocco-sa \
+  -Dpackaging=jar \
+  -Dversion=1.0.0 \
+  -Dfile=sirocco-sa-1.0.0.jar \
+  -DgeneratePom=true
+```
+
+* Install the Sirocco model file in your local Maven repository
+
+```
+mvn install:install-file \
+  -DgroupId=sirocco.sirocco-mo \
+  -DartifactId=sirocco-mo \
+  -Dpackaging=jar \
+  -Dversion=1.0.0 \
+  -Dfile=sirocco-mo-1.0.0.jar \
+  -DgeneratePom=true
+```
+
+#### Build the Dataflow pipelines
+
+
+#### Deploy your Controller pipeline to Cloud Dataflow
+
+
+#### Run a verification data ingestion job
 
 
 ### Clean up

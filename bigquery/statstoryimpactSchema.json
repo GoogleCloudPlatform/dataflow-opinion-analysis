@@ -1,0 +1,56 @@
+[
+    {
+        "mode": "NULLABLE",
+        "name": "SnapshotDateId",
+        "type": "INTEGER"
+    },	
+    {
+        "mode": "NULLABLE",
+        "name": "DocumentHash",
+        "type": "STRING",
+		"description": "ID of the Document record, calculated as to_base64(sha1(PublicationTime + Text))"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "DocumentCollectionId",
+        "type": "STRING",
+		"description" : "ID of the source document collection, if known."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "CollectionItemId",
+        "type": "STRING",
+		"description" : "Original ID in the source document collection, if known."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntWRs",
+        "type": "INTEGER",
+		"description": "Number of URLs that reposted the original news story (document)."
+    },
+	
+    {
+        "mode": "NULLABLE",
+        "name": "cntDomains",
+        "type": "INTEGER",
+		"description": "Number of news publisher domains reposting the original news story (document)."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntFb",
+        "type": "INTEGER",
+		"description": "Number of Facebook actions (likes, comments) across all web resources reposting the original news story (document)."
+    },
+    {
+        "mode": "REPEATED",
+        "name": "Domains",
+        "type": "STRING",
+		"description": "News publisher domains reposting the original news story (document)."
+    },
+    {
+        "mode": "REPEATED",
+        "name": "Urls",
+        "type": "STRING",
+		"description": "Web resources reposting the original news story (document)."
+    }
+]
