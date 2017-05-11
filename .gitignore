@@ -4,9 +4,11 @@ bin/
 
 # Ignore explicitely excluded folders
 unused/
-local/
 output/
 scheduler/lib/
+
+# Ignore local versions of scripts
+scripts/*_local.sh
 
 # Ignore Eclipse files.
 .classpath

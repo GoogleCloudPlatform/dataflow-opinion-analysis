@@ -16,12 +16,17 @@ This sample contains three components:
 
 
 ## How to run the sample
-The overview for configuring and running this sample is as follows:
+The steps for configuring and running this sample are as follows:
 
-1. Create a project and other cloud resources.
-2. Clone or download the sample code.
-3. Modify settings for cron jobs in YAML files located in the scheduler directory.
-4. Deploy the App Engine application responsible for orchestration.
+- Setup your Google Cloud Platform project and permissions.
+- Install tools necessary for compiling and deploying the code in this sample.
+- Create and setup a Cloud Storage bucket and Cloud Pub/Sub topics.
+- Create or verify a configuration for your project.
+- Clone the sample code
+- Specify cron jobs for the App Engine scheduling  app
+- Create the BigQuery dataset
+- Deploy the Dataflow pipelines
+- Clean up
 
 ### Prerequisites
 
@@ -62,15 +67,15 @@ Create or verify a configuration for your project
 
 * Authenticate with the Cloud Platform. Run the following command to get [Application Default Credentials](https://developers.google.com/identity/protocols/application-default-credentials).
 
-  `$ gcloud auth application-default login`
+  `gcloud auth application-default login`
 
 * Create a new configuration for your project if it does not exist already
 
-  `$ gcloud init`
+  `gcloud init`
 
 * Verify your configurations
 
-  `$ gcloud config configurations list`
+  `gcloud config configurations list`
 
 
 Important: This tutorial uses several billable components of Google Cloud
@@ -86,7 +91,7 @@ To clone the GitHub repository to your computer, run the following command:
 git clone https://github.com/GoogleCloudPlatform/dataflow-opinion-analysis
 ```
 
-Change directories to the `df-opinion-analysis` directory. The exact path
+Go to the `dataflow-opinion-analysis` directory. The exact path
 depends on where you placed the directory when you cloned the sample files from
 GitHub.
 
@@ -100,11 +105,11 @@ cd dataflow-opinion-analysis
 
 * In shell, activate the configuration for the project where you want to deploy the app 
 
-  `$ gcloud config configurations activate <config-name>`
+  `gcloud config configurations activate <config-name>`
 
 * Include the Python API client in your App Engine app
 
-  `$ pip install -t scheduler/lib/ google-api-python-client`
+  `pip install -t scheduler/lib/ google-api-python-client`
   
 * Adjust the schedule for your ETL jobs and edit the `scheduler/cron.yaml` file. You define tasks for App Engine Task Scheduler in [YAML format](http://yaml.org/). For a complete description of how to use YAML to specify jobs for Cron Service, including the schedule format, see [Scheduled Tasks with Cron for Python] (https://cloud.google.com/appengine/docs/python/config/cron#Python_app_yaml_The_schedule_format).
 
@@ -157,7 +162,7 @@ Table schema definitions are located in the *Schema.json files in the `bigquery`
 
 #### [Optional] Download and install the Sirocco sentiment analysis packages
 
-If you would like to employ this sample to analyze text and find opinions, download and install [Sirocco](https://github.com/datancoffee/sirocco), a framework maintained by [Sergei Sokolenko](https://medium.com/@datancoffee).
+If you would like to use this sample for deep textual analysis, download and install [Sirocco](https://github.com/datancoffee/sirocco), a framework maintained by [@datancoffee](https://medium.com/@datancoffee).
 
 * Download the [Sirocco Java framework](https://github.com/datancoffee/sirocco/releases/download/v1.0.0/sirocco-sa-1.0.0.jar) jar file.
 
@@ -189,21 +194,58 @@ mvn install:install-file \
   -DgeneratePom=true
 ```
 
-#### Build the Dataflow pipelines
+#### Build and Deploy your Controller pipeline to Cloud Dataflow
 
 
-#### Deploy your Controller pipeline to Cloud Dataflow
+* Go to the `dataflow-opinion-analysis/scripts` directory and make a copy of the `run_controljob_template.sh` file
+
+```
+cd scripts
+cp run_controljob_template.sh run_controljob.sh
+```
+
+* Edit the `run_controljob.sh` file in your favorite text editor, e.g. `nano`. Specifically, set the values of the variables used for parametarizing your control Dataflow pipeline. Set the values of the PROJECT_ID, DATASET_ID and other variables at the beginning of the shell script.
+
+* Go back to the `dataflow-opinion-analysis` directory and run a command to deploy the control Dataflow pipeline to Cloud Dataflow.
 
 
-#### Run a verification data ingestion job
+```
+cd ..
+scripts/run_controljob.sh &
+```
 
+#### Run a verification job
+
+You can use the included news articles (from Google's blogs) in the `src/test/resources/input` directory to run a test pipeline.
+
+* Upload the files in the `src/test/resources/input` directory into the GCS `input` bucket. Use the [Cloud Storage browser](https://console.cloud.google.com/storage/browser) to find the `input` directory you created in Prerequisites. Then, upload all files from your local `src/test/resources/input` directory.
+
+* Use the [Pub/Sub console](https://console.cloud.google.com/cloudpubsub/topicList) to send a command to start a file import job. Find the `indexercommand` topic in the Pub/Sub console. Click on its name.
+
+* Click on "Publish Message" button. In the Message box, copy the following command and click "Publish.
+
+```
+command=start_gcs_import
+```
+
+* In the [Dataflow Console](https://console.cloud.google.com/dataflow) observe how a new input job is created. It will have a "-gcsdocimport" suffix.
+
+* Once the Dataflow job successfully finishes, you can review the data it will write into your target BigQuery dataset. Use the [BigQuery console](https://bigquery.cloud.google.com/) to review the dataset.
+
+* Enter the following query to list new documents that were indexed by the Dataflow job. The sample query is using the Standard SQL dialect of BigQuery.
+
+```
+SELECT * FROM opinions.document 
+ORDER BY ProcessingTime DESC
+LIMIT 100
+```
 
 ### Clean up
 
 Now that you have tested the sample, delete the cloud resources you created to
 prevent further billing for them on your account.
 
-* Stop the Cloud Dataflow job in the [Dataflow Cloud Console](https://console.cloud.google.com/dataflow).
+* Stop the control Cloud Dataflow job in the [Dataflow Cloud Console](https://console.cloud.google.com/dataflow).
 
 
 * Disable and delete the App Engine application as described in

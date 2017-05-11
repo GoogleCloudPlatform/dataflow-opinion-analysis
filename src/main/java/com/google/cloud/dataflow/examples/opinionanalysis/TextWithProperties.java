@@ -87,7 +87,6 @@ public class TextWithProperties {
 
 		Long result = null;
 		
-		// http://www.java2s.com/Tutorial/Java/0040__Data-Type/SimpleDateFormat.htm
 		try {
 			SimpleDateFormat formatter = new SimpleDateFormat(format);
 			Date date = formatter.parse(s);
