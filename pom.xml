@@ -222,6 +222,15 @@
     	<artifactId>sirocco-mo</artifactId>
     	<version>[1.0.0,2.0.0)</version>
     </dependency>
+    
+   <!-- Fixing versions for packages used by sirocco -->
+	<dependency>
+    	<groupId>commons-codec</groupId>
+    	<artifactId>commons-codec</artifactId>
+    	<version>1.9</version>
+	</dependency>
+   <!-- End sirocco versions -->
+    
 
     <dependency>
       <groupId>com.google.code.findbugs</groupId>
@@ -258,7 +267,7 @@
     	<artifactId>google-auth-library-oauth2-http</artifactId>
     	<version>0.5.0</version>
 	</dependency>
-
+	
    <!-- compile dependencies -->
     <dependency>
       <groupId>com.google.auto.value</groupId>

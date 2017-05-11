@@ -235,8 +235,8 @@ command=start_gcs_import
 * Enter the following query to list new documents that were indexed by the Dataflow job. The sample query is using the Standard SQL dialect of BigQuery.
 
 ```
-SELECT * FROM opinions.document 
-ORDER BY ProcessingTime DESC
+SELECT * FROM opinions.sentiment 
+ORDER BY DocumentTime DESC
 LIMIT 100
 ```
 

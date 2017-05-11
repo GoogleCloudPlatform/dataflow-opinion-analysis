@@ -83,7 +83,12 @@ public class InputContent {
 
 		result.documentCollectionId = t.properties.get("collectionid");
 		result.collectionItemId = t.properties.get("itemid");
-		result.skipIndexing = Integer.decode(t.properties.get("skipindexing"));
+		
+		String sSkipindexing = t.properties.get("skipindexing");
+		if (sSkipindexing != null)
+			result.skipIndexing = Integer.decode(sSkipindexing);
+		else
+			result.skipIndexing = 0;
 		
 		return result;		
 				
