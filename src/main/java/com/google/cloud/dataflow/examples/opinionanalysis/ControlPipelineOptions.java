@@ -45,5 +45,17 @@ public interface ControlPipelineOptions extends IndexerPipelineOptions {
     @Description("Value of maxNumWorkers param for initiated Jobs")
     Integer getJobMaxNumWorkers();
     void setJobMaxNumWorkers(Integer value);    
+
+    @Description("Worker machine type for initiated Jobs")
+    String getJobWorkerMachineType();
+    void setJobWorkerMachineType(String value);    
+    
+    @Description("Size of PD Disks for initiated Jobs")
+    Integer getJobDiskSizeGb();
+    void setJobDiskSizeGb(Integer value);    
+    
+    @Description("Staging location for launched pipelines")
+    String getJobStagingLocation();
+    void setJobStagingLocation(String location);
     
 }

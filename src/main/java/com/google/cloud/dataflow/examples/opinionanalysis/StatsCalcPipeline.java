@@ -17,8 +17,10 @@ package com.google.cloud.dataflow.examples.opinionanalysis;
 
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
+import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.QueryRequest;
 import com.google.cloud.bigquery.QueryResponse;
+
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
@@ -32,6 +34,8 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipeline.LogPipelineOptions;
 
 public class StatsCalcPipeline {
 	
@@ -99,7 +103,7 @@ public class StatsCalcPipeline {
 
 			if (queryBatch == null) 
 		    	return;
-						
+			
 		    BigQuery bigquery = BigQueryOptions.getDefaultInstance().getService();
 
 		    for (int i=0; i < queryBatch.length; i++) {
@@ -114,7 +118,8 @@ public class StatsCalcPipeline {
 				while (!done) {
 					try {
 						Thread.sleep(1000);
-						response = bigquery.getQueryResults(response.getJobId());
+						JobId jobId = response.getJobId();
+						response = bigquery.getQueryResults(jobId);
 						done = response.jobCompleted();
 					} catch (InterruptedException e) {
 						LOG.warn(e.getMessage());
@@ -126,7 +131,6 @@ public class StatsCalcPipeline {
 				}
 		    
 		    }
-
 		}
 		
 

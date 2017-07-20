@@ -41,9 +41,10 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.beam.sdk.io.jdbc.JdbcIO;
+import org.apache.beam.sdk.io.jdbc.JdbcIO.RowMapper;
+
 import java.sql.ResultSet;
 
-import org.apache.beam.sdk.io.jdbc.JdbcIO.RowMapper;
 
 public class SocialStatsPipeline {
 	
@@ -102,24 +103,22 @@ public class SocialStatsPipeline {
                 })
                 .withCoder(AvroCoder.of(WebresourceSocialCount.class))
 	    );
-					 			
 		
 		// if content is to be added to bigquery, then obtain a list of
 		// latest social stats per page
 		PCollection<WebresourceSocialCount> countsToProcess = null;
-
 		
 		if (options.getWriteTruncate() != null && !options.getWriteTruncate() && options.getWrSocialCountHistoryWindowSec() != null) {
 			String queryCache = IndexerPipelineUtils.buildBigQueryProcessedSocialCountsQuery(options);
 			PCollection<KV<String,Long>> lastCountTimes = pipeline
-				.apply("Get processed social count times", BigQueryIO.Read.fromQuery(queryCache))
+				.apply("Get processed social count times", BigQueryIO.read().fromQuery(queryCache))
 				.apply(ParDo.of(new GetLastCountTime()));
 	
 			final PCollectionView<Map<String,Long>> lastCountTimesSideInput =
 					lastCountTimes.apply(View.<String,Long>asMap());
 			  
 			countsToProcess = readCounts
-				.apply(ParDo.withSideInputs(lastCountTimesSideInput)
+				.apply(ParDo
 						.of(new DoFn<WebresourceSocialCount, WebresourceSocialCount>() {
 							@ProcessElement
 							public void processElement(ProcessContext c) {
@@ -131,7 +130,9 @@ public class SocialStatsPipeline {
 								if (lastTime == null || lastTime < i.countTime)
 									c.output(i);
 							}
-						}));
+						})
+						.withSideInputs(lastCountTimesSideInput)
+						);
 		} else {
 			countsToProcess = readCounts;
 		}
@@ -144,9 +145,11 @@ public class SocialStatsPipeline {
 				WriteDisposition.WRITE_TRUNCATE: WriteDisposition.WRITE_APPEND; 
 		
 		wrSocialCounts
-			.apply("Write to wrsocialcount", BigQueryIO.Write.to(getWRSocialCountTableReference(options)) // Pipeline step {4}
+			.apply("Write to wrsocialcount", BigQueryIO
+				.writeTableRows() 
 				.withSchema(getWrSocialCountSchema())
-				.withWriteDisposition(dispo)); 
+				.withWriteDisposition(dispo)
+				.to(getWRSocialCountTableReference(options))); 
 		
 
 		return pipeline;

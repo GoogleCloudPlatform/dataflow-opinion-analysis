@@ -77,6 +77,18 @@
         "type": "STRING"
     },
     {
+        "mode": "NULLABLE",
+        "name": "MainWebResourceHash",
+        "type": "STRING",
+        "description" : "In case of multiple webresource records pointing to the same document, this field points to the webresource that will be considered authoritative"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "ParentWebResourceHash",
+        "type": "STRING",
+        "description" : "In threaded conversations, the parent is the previous comment, email, or document."
+    },
+    {
         "mode": "REPEATED",
         "name": "Tags",
         "type": "RECORD",

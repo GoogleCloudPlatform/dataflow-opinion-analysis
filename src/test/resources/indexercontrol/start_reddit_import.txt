@@ -1,0 +1,6 @@
+command=start_reddit_import
+writetruncate=true
+poststable=fh-bigquery:reddit_posts.2017_03
+commentstable=fh-bigquery:reddit_comments.2017_03
+#postsquery=SELECT * FROM [fh-bigquery:reddit_posts.2017_03] LIMIT 100
+#commentsquery=SELECT * FROM [fh-bigquery:reddit_comments.2017_03] LIMIT 100

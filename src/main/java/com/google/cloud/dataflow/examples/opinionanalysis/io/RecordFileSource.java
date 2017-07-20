@@ -17,20 +17,23 @@ package com.google.cloud.dataflow.examples.opinionanalysis.io;
 
 import static com.google.common.base.Preconditions.checkState;
 
+
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.util.NoSuchElementException;
-
 import org.apache.beam.sdk.coders.Coder;
 import org.apache.beam.sdk.coders.Coder.Context;
 import org.apache.beam.sdk.io.FileBasedSource;
+import org.apache.beam.sdk.io.fs.MatchResult;
 import org.apache.beam.sdk.options.PipelineOptions;
-import com.google.protobuf.ByteString;
+import org.apache.beam.sdk.options.ValueProvider;
 
 /**
  * A {@link FileBasedSource} which can decode records delimited by characters.
+ * Generalized from on org.apache.beam.sdk.io.TextSource.
  *
  * <p>This source splits the data into records using characters passed as the delimiter. 
  * This source is not strict and supports decoding the last record
@@ -42,28 +45,33 @@ import com.google.protobuf.ByteString;
  */
 
 public class RecordFileSource<T> extends FileBasedSource<T> {
+	
   /** The Coder to use to decode each record. */
   private final Coder<T> coder;
   /** The separator to use to separate the records in a single file */
   private final byte separator;
 
   public static final byte DEFAULT_RECORD_SEPARATOR = '\036'; // use ASCII Record Separator RS octal number 036
-
-  public RecordFileSource(String fileSpec, Coder<T> coder, byte separator) {
+	
+	
+  public RecordFileSource(ValueProvider<String> fileSpec, Coder<T> coder, byte separator) {
     super(fileSpec, 1L);
     this.coder = coder;
     this.separator = separator;
   }
 
-  private RecordFileSource(String fileName, long start, long end, Coder<T> coder, byte separator) {
-    super(fileName, 1L, start, end);
+  private RecordFileSource(MatchResult.Metadata metadata, long start, long end, Coder<T> coder, byte separator) {
+    super(metadata, 1L, start, end);
     this.coder = coder;
     this.separator = separator;
   }
 
   @Override
-  protected FileBasedSource<T> createForSubrangeOfFile(String fileName, long start, long end) {
-    return new RecordFileSource<>(fileName, start, end, coder, separator);
+  protected FileBasedSource<T> createForSubrangeOfFile(
+      MatchResult.Metadata metadata,
+      long start,
+      long end) {
+    return new RecordFileSource<>(metadata, start, end, coder, separator);
   }
 
   @Override
@@ -71,13 +79,6 @@ public class RecordFileSource<T> extends FileBasedSource<T> {
     return new RecordFileReader<>(this);
   }
 
-  /*
-  @Override
-  public boolean producesSortedKeys(PipelineOptions options) throws Exception {
-    return false;
-  }
-  */
-  
   @Override
   public Coder<T> getDefaultOutputCoder() {
     return coder;
@@ -89,9 +90,11 @@ public class RecordFileSource<T> extends FileBasedSource<T> {
    *
    * See {@link RecordFileSource} for further details.
    */
-  public class RecordFileReader<T> extends FileBasedReader<T> {
+  
+  public static class RecordFileReader<T> extends FileBasedReader<T> {
+	private final Coder<T> coder;
+	private final byte separator;
     private static final int READ_BUFFER_SIZE = 8192;
-    private final Coder<T> coder;
     private final ByteBuffer readBuffer = ByteBuffer.allocate(READ_BUFFER_SIZE);
     private ByteString buffer;
     private int startOfSeparatorInBuffer;
@@ -102,14 +105,11 @@ public class RecordFileSource<T> extends FileBasedSource<T> {
     private volatile boolean elementIsPresent;
     private T currentValue;
     private ReadableByteChannel inChannel;
-    
-    private final byte separator;
-    
 
     private RecordFileReader(RecordFileSource<T> source) {
       super(source);
-      coder = source.coder;
       buffer = ByteString.EMPTY;
+      coder = source.coder;
       separator = source.separator;
     }
 
@@ -185,6 +185,7 @@ public class RecordFileSource<T> extends FileBasedSource<T> {
           endOfSeparatorInBuffer = startOfSeparatorInBuffer + 1;
           break;
         }
+
         // Move to the next byte in buffer.
         bytePositionInBuffer += 1;
       }
@@ -210,11 +211,14 @@ public class RecordFileSource<T> extends FileBasedSource<T> {
     /**
      * Decodes the current element updating the buffer to only contain the unconsumed bytes.
      *
-     * This invalidates the currently stored {@code startOfSeparatorInBuffer} and
+     * <p>This invalidates the currently stored {@code startOfSeparatorInBuffer} and
      * {@code endOfSeparatorInBuffer}.
      */
     private void decodeCurrentElement() throws IOException {
       ByteString dataToDecode = buffer.substring(0, startOfSeparatorInBuffer);
+      // sso 7/12/2017: TODO: the 2.0 method call , without Context.OUTER, returns gibberish
+      // restoring 1.9 code, and need to follow up with the SDK team
+      // currentValue = coder.decode(dataToDecode.newInput()); // currentValue = dataToDecode.toStringUtf8();
       currentValue = coder.decode(dataToDecode.newInput(), Context.OUTER);
       elementIsPresent = true;
       buffer = buffer.substring(endOfSeparatorInBuffer);

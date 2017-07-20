@@ -68,5 +68,11 @@
         "name": "Author",
         "type": "STRING",
 		"description": "Person who claims authorship of the resource, if we can determine it"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "ParentWebResourceHash",
+        "type": "STRING",
+        "description" : "(Optional) In threaded conversations, the parent is the previous comment, email, or document"
     }
 ]

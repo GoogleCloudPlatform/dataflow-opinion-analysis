@@ -30,6 +30,7 @@ mvn compile exec:java \
     --runner=DataflowRunner \
     --tempLocation=gs://$GCS_BUCKET/temp/ \
     --maxNumWorkers=1 \
+    --workerMachineType=n1-standard-1 \
     --zone=us-central1-f \
     --streaming=true \
     --controlPubsub=true \
@@ -38,6 +39,8 @@ mvn compile exec:java \
     --controlGCSPath=gs://$GCS_BUCKET/indexercontrol/*.txt \
     --jobAutoscalingAlgorithm=THROUGHPUT_BASED \
     --jobMaxNumWorkers=100 \
+    --jobWorkerMachineType=n1-standard-2 \
+    --jobDiskSizeGb=400 \
     --sourceJDBC=false \
     --jdbcDriverClassName=com.mysql.jdbc.Driver \
     --jdbcSourceUrl=$JDBC_SOURCE_URL \
