@@ -20,8 +20,12 @@ import org.apache.avro.reflect.Nullable;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.DefaultCoder;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineUtils;
 import com.google.cloud.dataflow.examples.opinionanalysis.TextWithProperties;
+
+import sirocco.util.HashUtils;
 
 
 
@@ -47,14 +51,26 @@ public class InputContent {
 	public String collectionItemId;
 	@Nullable
 	public Integer skipIndexing;
+	@Nullable
+	public String parentUrl;
+	@Nullable
+	public Long parentPubTime;
+	@Nullable
+	public String expectedDocumentHash;
+	@Nullable
+	public String expectedWebResourceHash;
+	@Nullable
+	public String expectedParentWebResourceHash;
 
 	public InputContent() {}
 
-	
-	
-	
 	public InputContent(String url, Long pubTime, String title, String author, String language, String text, 
 			String documentCollectionId, String collectionItemId, Integer skipIndexing) {
+		this( url,  pubTime,  title,  author,  language,  text, documentCollectionId,  collectionItemId, skipIndexing, null, null);
+	}
+	
+	public InputContent(String url, Long pubTime, String title, String author, String language, String text, 
+			String documentCollectionId, String collectionItemId, Integer skipIndexing, String parentUrl, Long parentPubTime) {
 		this.url = url;
 		this.pubTime = pubTime;
 		this.title = title;
@@ -64,6 +80,10 @@ public class InputContent {
 		this.documentCollectionId = documentCollectionId;
 		this.collectionItemId = collectionItemId;
 		this.skipIndexing = skipIndexing;
+		this.parentUrl = parentUrl;
+		this.parentPubTime = parentPubTime;
+		
+		this.calculateHashFields();
 	}
 	
 	public static InputContent createInputContent(String s) throws Exception
@@ -89,9 +109,59 @@ public class InputContent {
 			result.skipIndexing = Integer.decode(sSkipindexing);
 		else
 			result.skipIndexing = 0;
+
+		result.parentUrl = t.properties.get("parenturl");
+		sPubTime = t.properties.get("parentpubtime");
+		if (sPubTime != null)
+			result.parentPubTime=IndexerPipelineUtils.parseDateToLong(sPubTime);	
+		
+		result.calculateHashFields();
 		
 		return result;		
 				
 	}
 
+	
+	public static InputContent createInputContentFromGDELTJson(String s) throws Exception
+	{
+
+		ObjectMapper objectMapper = new ObjectMapper();
+		JsonNode node = objectMapper.readValue(s, JsonNode.class);
+
+		InputContent result = new InputContent();
+		
+		result.url = node.get("url").asText();
+		result.title = node.get("title").asText();
+		result.author = null;
+		
+		if (node.get("langcode").asText().equals("eng"))
+			result.language = "EN";
+		else 
+			result.language = "UN";
+		
+		result.text = node.get("fulltext").asText();
+
+		String sPubTime = node.get("date").asText();
+		if (sPubTime != null)
+			result.pubTime=IndexerPipelineUtils.parseDateToLong(IndexerPipelineUtils.dateTimeFormatYMD_T_HMS_Z,sPubTime);	
+
+		result.documentCollectionId = IndexerPipelineUtils.DOC_COL_ID_GDELT_BUCKET;
+		result.collectionItemId = node.get("gkgoffsets").asText();
+		
+		
+		result.skipIndexing = 0;
+
+		result.calculateHashFields();
+		
+		return result;		
+				
+	}
+	
+	private void calculateHashFields()
+	{
+		this.expectedDocumentHash = ((this.pubTime != null) && (this.text !=null)) ? HashUtils.getSHA1HashBase64(pubTime + text) : null;
+		this.expectedWebResourceHash = ((this.pubTime != null) && (this.url !=null)) ? HashUtils.getSHA1HashBase64(pubTime + url) : null;
+		this.expectedParentWebResourceHash = ((this.parentUrl != null && this.parentPubTime != null)) ? HashUtils.getSHA1HashBase64(this.parentPubTime + this.parentUrl) : null;
+	}
+	
 }

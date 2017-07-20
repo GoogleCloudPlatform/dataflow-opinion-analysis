@@ -18,14 +18,12 @@ package com.google.cloud.dataflow.examples.opinionanalysis;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
-import org.apache.beam.sdk.options.PipelineOptions;
 
 /**
  * Options supported by {@link IndexerPipeline}.
  *
  */
-public interface IndexerPipelineOptions
-		extends PipelineOptions, DataflowPipelineOptions {
+public interface IndexerPipelineOptions extends DataflowPipelineOptions {
 
 	@Description("Whether to connect to Pub/Sub as source")
 	@Default.Boolean(false)
@@ -42,7 +40,17 @@ public interface IndexerPipelineOptions
 	Boolean isSourceRecordFile();
 	void setSourceRecordFile(Boolean value);
 	
-    @Description("Source GCS files. Use with RecordFile file sources.")
+	@Description("Whether to connect to BigQuery dataset with Reddit posts and comments")
+	@Default.Boolean(false)
+	Boolean isSourceRedditBQ();
+	void setSourceRedditBQ(Boolean value);
+
+	@Description("Whether to read files from GDELT bucket")
+	@Default.Boolean(false)
+	Boolean isSourceGDELTbucket();
+	void setSourceGDELTbucket(Boolean value);
+		
+	@Description("Source files. Use with RecordFile and GDELTbucket sources. Names can be a pattern like *.gz or *.txt")
     String getInputFile();
     void setInputFile(String value);
 
@@ -78,6 +86,22 @@ public interface IndexerPipelineOptions
     String getJdbcSourceToDate();
     void setJdbcSourceToDate(String jdbcSourceToDate);
 
+    @Description("Source Reddit Posts [fully qualified] Table Name")
+    String getRedditPostsTableName();
+    void setRedditPostsTableName(String redditPostsTableName);
+
+    @Description("Source Reddit [fully qualified] Comments Table Name")
+    String getRedditCommentsTableName();
+    void setRedditCommentsTableName(String redditCommentsTableName);
+
+    @Description("Source Reddit Query for Posts")
+    String getRedditPostsQuery();
+    void setRedditPostsQuery(String redditPostsQuery);
+
+    @Description("Source Reddit Query for Comments")
+    String getRedditCommentsQuery();
+    void setRedditCommentsQuery(String redditCommentsQuery);
+    
     @Description("Sink BigQuery dataset name")
     String getBigQueryDataset();
     void setBigQueryDataset(String dataset);

@@ -56,6 +56,86 @@ public class StatsCalcPipelineUtils {
 "p AS (\n"+
 paramsString+
 "),\n"+
+"SentimentTags AS (\n"+
+"  SELECT p.SnapshotDateId, s.SentimentHash, t.Tag, t.GoodAsTopic, s.Tags AS Tags\n"+
+"  FROM p, "+datasetName+".sentiment s, UNNEST(s.Tags) AS t\n"+
+"  WHERE\n"+
+"    s.DocumentDateId = p.SnapshotDateId AND s.SentimentTotalScore > 0\n"+
+"),\n"+
+"SentimentTagCombos AS (\n"+
+"  SELECT st.SnapshotDateId, st.SentimentHash, st.Tag AS Tag1, stt.Tag AS Tag2 \n"+
+"  FROM SentimentTags st, UNNEST(st.Tags) stt\n"+
+"  WHERE st.Tag < stt.Tag\n"+
+"),\n"+
+"CalcStatSentiments AS (\n"+
+"  SELECT st.SnapshotDateId, st.Tag, st.GoodAsTopic, d.DocumentHash AS DocumentHash, s.SentimentHash,\n"+
+"    wrOrig.WebResourceHash AS OrigWebResourceHash, wrOrig.Domain AS OrigDomain, wrRepost.WebResourceHash AS RepostWebResourceHash,\n"+
+"    s.DominantValence AS Valence, d.PublicationTime AS PublicationTime\n"+
+"  FROM SentimentTags st\n"+
+"    INNER JOIN "+datasetName+".sentiment s ON s.SentimentHash = st.SentimentHash AND s.DocumentDateId = st.SnapshotDateId\n"+
+"    INNER JOIN "+datasetName+".document d ON d.DocumentHash = s.DocumentHash AND d.PublicationDateId = st.SnapshotDateId\n"+
+"    INNER JOIN "+datasetName+".webresource wrOrig ON wrOrig.DocumentHash = d.DocumentHash\n"+
+"    INNER JOIN "+datasetName+".webresource wrRepost ON wrRepost.DocumentCollectionId = d.DocumentCollectionId\n"+
+"      AND wrRepost.CollectionItemId = d.CollectionItemId\n"+
+"),\n"+
+"CalcStatTopics AS (\n"+
+"  SELECT\n"+
+"    c.SnapshotDateId, c.Tag AS Topic, [c.Tag] AS Tags, c.GoodAsTopic, 1 AS TagCount,\n"+
+"    COUNT(distinct OrigDomain) as cntOrigPublishers,\n"+
+"    COUNT(distinct RepostWebResourceHash) as cntRepostWRs,\n"+
+"    COUNT(distinct (case when c.Valence=1 then c.SentimentHash else null end)) as cntPositives,\n"+
+"    COUNT(distinct (case when c.Valence=2 then c.SentimentHash else null end)) as cntNegatives,\n"+
+"    COUNT(distinct (case when c.Valence=3 then c.SentimentHash else null end)) as cntAmbiguous,\n"+
+"    COUNT(distinct (case when c.Valence=5 then c.SentimentHash else null end)) as cntGeneral,\n"+
+"    ARRAY_AGG(DISTINCT c.SentimentHash) AS SentimentHashes,\n"+
+"    ARRAY_AGG(DISTINCT c.OrigWebResourceHash) AS OrigWebResourceHashes,\n"+
+"    ARRAY_AGG(DISTINCT c.RepostWebResourceHash) AS RepostWebResourceHashes\n"+
+"  FROM CalcStatSentiments c\n"+
+"  GROUP BY c.SnapshotDateId, c.Tag, c.GoodAsTopic\n"+
+"),\n"+
+"CalcStatCombiTopics AS (\n"+
+"  SELECT \n"+
+"    stc.SnapshotDateId, CONCAT(stc.Tag1,' & ',stc.Tag2) AS Topic, [stc.Tag1,stc.Tag2] AS Tags, true AS GoodAsTopic, 2 AS TagCount,\n"+
+"    COUNT(distinct wrOrig.Domain) as cntOrigPublishers,\n"+
+"    COUNT(distinct wrRepost.WebResourceHash) as cntRepostWRs,\n"+
+"    COUNT(distinct (case when s.DominantValence=1 then s.SentimentHash else null end)) as cntPositives,\n"+
+"    COUNT(distinct (case when s.DominantValence=2 then s.SentimentHash else null end)) as cntNegatives,\n"+
+"    COUNT(distinct (case when s.DominantValence=3 then s.SentimentHash else null end)) as cntAmbiguous,\n"+
+"    COUNT(distinct (case when s.DominantValence=5 then s.SentimentHash else null end)) as cntGeneral,\n"+
+"    ARRAY_AGG(DISTINCT s.SentimentHash) AS SentimentHashes,\n"+
+"    ARRAY_AGG(DISTINCT wrOrig.WebResourceHash) AS OrigWebResourceHashes,\n"+
+"    ARRAY_AGG(DISTINCT wrRepost.WebResourceHash) AS RepostWebResourceHashes\n"+
+"  FROM SentimentTagCombos stc\n"+
+"    INNER JOIN "+datasetName+".sentiment s ON s.SentimentHash = stc.SentimentHash AND s.DocumentDateId = stc.SnapshotDateId\n"+
+"    INNER JOIN "+datasetName+".document d ON d.DocumentHash = s.DocumentHash AND d.PublicationDateId = stc.SnapshotDateId\n"+
+"    INNER JOIN "+datasetName+".webresource wrOrig ON wrOrig.DocumentHash = d.DocumentHash\n"+
+"    INNER JOIN "+datasetName+".webresource wrRepost ON wrRepost.DocumentCollectionId = d.DocumentCollectionId\n"+
+"      AND wrRepost.CollectionItemId = d.CollectionItemId\n"+
+"  GROUP BY stc.SnapshotDateId, stc.Tag1, stc.Tag2\n"+
+"  -- HAVING cntPublisherDomains > 1\n"+
+"),\n"+
+"CalcStatAllTopics AS (\n"+
+"  SELECT * FROM CalcStatTopics\n"+
+"  WHERE GoodAsTopic = true AND cntRepostWRs > 1\n"+
+"  UNION ALL\n"+
+"  SELECT * FROM CalcStatCombiTopics\n"+
+"  WHERE GoodAsTopic = true AND cntRepostWRs > 1\n"+
+")\n"+
+"SELECT SnapshotDateId, Topic, Tags, TagCount, cntOrigPublishers, cntRepostWRs,\n"+  
+"  cntPositives, cntNegatives, cntAmbiguous, cntGeneral, SentimentHashes, OrigWebResourceHashes, RepostWebResourceHashes\n"+
+"FROM CalcStatAllTopics"; 	
+
+/*			
+ * 7/6/2017: before perf improvements
+ * 
+			String result =	
+					
+"INSERT INTO "+datasetName+".stattopic (SnapshotDateId, Topic, Tags, TagCount, cntOrigPublishers, cntRepostWRs,\n"+
+"  cntPositives, cntNegatives, cntAmbiguous, cntGeneral, SentimentHashes, OrigWebResourceHashes, RepostWebResourceHashes )\n"+
+"WITH \n"+
+"p AS (\n"+
+paramsString+
+"),\n"+
 "CalcStatSentiments AS (\n"+
 "  SELECT p.SnapshotDateId, t.Tag, t.GoodAsTopic, d.DocumentHash AS DocumentHash, s.SentimentHash,\n"+
 "    wrOrig.WebResourceHash AS OrigWebResourceHash, wrOrig.Domain AS OrigDomain, wrRepost.WebResourceHash AS RepostWebResourceHash,\n"+
@@ -115,6 +195,8 @@ paramsString+
 "  cntPositives, cntNegatives, cntAmbiguous, cntGeneral, SentimentHashes, OrigWebResourceHashes, RepostWebResourceHashes\n"+
 "FROM CalcStatAllTopics"; 	
 
+	
+ */			
 			return result;			
 			
 		}

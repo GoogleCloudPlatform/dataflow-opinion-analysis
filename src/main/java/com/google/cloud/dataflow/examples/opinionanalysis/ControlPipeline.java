@@ -18,8 +18,10 @@ package com.google.cloud.dataflow.examples.opinionanalysis;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.joda.time.Duration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,14 +31,32 @@ import com.google.cloud.dataflow.examples.opinionanalysis.io.RecordFileSource;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.AvroCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
-import org.apache.beam.sdk.io.PubsubIO;
+import org.apache.beam.sdk.io.FileSystems;
 import org.apache.beam.sdk.io.Read.Bounded;
+import org.apache.beam.sdk.io.gcp.pubsub.PubsubIO;
+import org.apache.beam.runners.dataflow.DataflowRunner;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
+import org.apache.beam.sdk.options.Description;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
+import org.apache.beam.sdk.options.ValueProvider;
+import org.apache.beam.sdk.transforms.Create;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import org.apache.beam.sdk.util.PubsubClient;
-import org.apache.beam.sdk.util.PubsubJsonClient;
+import org.apache.beam.sdk.transforms.windowing.Window;
+import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.transforms.windowing.AfterPane;
+import org.apache.beam.sdk.transforms.windowing.FixedWindows;
+import org.apache.beam.sdk.transforms.windowing.GlobalWindows;
+//import org.apache.beam.sdk.io.gcp.pubsub.PubsubClient;
+//import org.apache.beam.sdk.io.gcp.pubsub.PubsubJsonClient;
+/*
+import com.google.cloud.pubsub.spi.v1.TopicAdminClient;
+import com.google.pubsub.v1.SubscriptionName;
+import com.google.pubsub.v1.TopicName;
+import com.google.pubsub.v1.PushConfig;
+import com.google.pubsub.v1.Subscription;
+import com.google.cloud.pubsub.spi.v1.SubscriptionAdminClient;
+*/
 import org.apache.beam.runners.dataflow.options.DataflowPipelineWorkerPoolOptions;
 
 public class ControlPipeline {
@@ -53,19 +73,65 @@ public class ControlPipeline {
 		if (options.isControlGCS()) {
 			
 			// Read commands from GCS file(s)
-			final Bounded<String> read = org.apache.beam.sdk.io.Read.from(
-				new RecordFileSource<String>(options.getControlGCSPath(), StringUtf8Coder.of(), RecordFileSource.DEFAULT_RECORD_SEPARATOR));
 
+			final Bounded<String> read = org.apache.beam.sdk.io.Read.from(
+				new RecordFileSource<String>(ValueProvider.StaticValueProvider.of(options.getControlGCSPath()), 
+					StringUtf8Coder.of(), RecordFileSource.DEFAULT_RECORD_SEPARATOR));
 			pipeline
 				.apply("Read", read)
-				.apply("Process Commands",ParDo.of(new ProcessCommand()));		
+				.apply("Process Commands",ParDo.of(new ProcessCommand()));	
+
 			
 		} else if (options.isControlPubsub()){
 
 			options.setStreaming(true);
-			PubsubClient pubsubClient = PubsubJsonClient.FACTORY.newClient(null, null, options.as(DataflowPipelineOptions.class));
+			
+			// Accept commands from a Control Pub/Sub topic
+			pipeline
+				.apply("Read from control topic",
+					PubsubIO.readStrings().fromTopic(options.getControlPubsubTopic()))
+				.apply("Process Commands",ParDo.of(new ProcessCommand()));		
+			
+			
+			/* This section will eventually work with the 0.19.0-alpha
+			 * and later versions of the ideomatic Java client google-cloud
+			 * But for now remove this check.
 
-			String subscriptionPath = "projects/"+options.getProject()+"/subscriptions/indexercommands_controller";
+			String subscriptionId = "indexercommands_controller";
+			String topicId = options.getControlPubsubTopic();
+			String projectId = options.getProject();
+			String subscriptionPath = "projects/"+projectId+"/subscriptions/"+subscriptionId;
+
+			// Support legacy way of passing the Control Topic that included the whole path
+			if (topicId.startsWith("projects/")) {
+				String[] tokens = topicId.split("/");
+				topicId = tokens[tokens.length-1];
+			}
+			
+			SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create();
+			SubscriptionName subscriptionName = SubscriptionName.create(projectId, subscriptionId);
+			TopicName topicName = TopicName.create(projectId, topicId);
+			
+			Subscription subscription;
+		    try {
+		        subscription = subscriptionAdminClient.getSubscription(subscriptionName);
+		    } catch (Exception e) {
+		    	subscription = null;
+		    }
+		    
+		    if (subscription == null) {
+		    	try {
+		    		// create a pull subscription
+		    		subscription = subscriptionAdminClient.createSubscription(
+		    				subscriptionName, topicName, PushConfig.getDefaultInstance(), 60);
+		    	} catch (Exception e) {
+		    		LOG.error(e.getMessage());
+		    		System.exit(1);
+		    	}
+		    }
+			*/
+			/*
+			PubsubClient pubsubClient = PubsubJsonClient.FACTORY.newClient(null, null, options.as(DataflowPipelineOptions.class));
 			PubsubClient.ProjectPath pp = PubsubClient.projectPathFromPath("projects/"+options.getProject());
 			PubsubClient.TopicPath tp = PubsubClient.topicPathFromPath(options.getControlPubsubTopic());
 			PubsubClient.SubscriptionPath sp = PubsubClient.subscriptionPathFromPath(subscriptionPath);
@@ -73,12 +139,8 @@ public class ControlPipeline {
 			List<PubsubClient.SubscriptionPath> l = pubsubClient.listSubscriptions(pp, tp);
 			if (!l.contains(sp))
 				pubsubClient.createSubscription(tp, sp, 60);
+			*/
 			
-			// Accept commands from a Control Pub/Sub topic
-			pipeline
-				.apply("Read from control topic",
-						PubsubIO.<String>read().withCoder(StringUtf8Coder.of()).subscription(subscriptionPath))
-				.apply("Process Commands",ParDo.of(new ProcessCommand()));		
 		}
 		
 		pipeline.run();
@@ -133,8 +195,7 @@ public class ControlPipeline {
 		public void startDocumentImportPipeline(PipelineCommand command, ControlPipelineOptions options) throws Exception {
 
 			LOG.info("ProcessCommand.startDocumentImportPipeline entered with command "+command.command);
-
-			IndexerPipelineOptions copiedOptions = createJobOptions(options);
+			IndexerPipelineOptions copiedOptions = createJobOptions(options, command);
 
 			// do some common option transfer and setting
 			transferOptions(options, copiedOptions);
@@ -149,17 +210,24 @@ public class ControlPipeline {
 			if (command.command.equals(PipelineCommand.START_GCS_IMPORT)) {
 
 				copiedOptions.setSourceRecordFile(true);
-				copiedOptions.setSourcePubsub(false); 
-				copiedOptions.setSourceJDBC(false); 
 				copiedOptions.setJobName(options.getJobName() + "-gcsdocimport");
 
 				if (command.gcsPath != null)
 					copiedOptions.setInputFile(command.gcsPath);
+				
+			} else if (command.command.equals(PipelineCommand.START_GDELTBUCKET_IMPORT)) {
+
+				copiedOptions.setStreaming(false);
+				
+				copiedOptions.setSourceGDELTbucket(true);
+				copiedOptions.setJobName(options.getJobName() + "-gdeltbucketimport");
+
+				if (command.gcsPath != null)
+					copiedOptions.setInputFile(command.gcsPath);
+				
 			
 			} else if (command.command.equals(PipelineCommand.START_JDBC_IMPORT)) {
 				
-				copiedOptions.setSourceRecordFile(false);
-				copiedOptions.setSourcePubsub(false); 
 				copiedOptions.setSourceJDBC(true); 
 				copiedOptions.setJobName(options.getJobName() + "-jdbcdocimport");
 
@@ -174,16 +242,31 @@ public class ControlPipeline {
 			
 			} else if (command.command.equals(PipelineCommand.START_PUBSUB_IMPORT)) {
 				
-				copiedOptions.setSourceRecordFile(false);
 				copiedOptions.setSourcePubsub(true); 
-				copiedOptions.setSourceJDBC(false); 
 				copiedOptions.setJobName(options.getJobName() + "-pubsubdocimport");
+			
+			} else if (command.command.equals(PipelineCommand.START_REDDIT_IMPORT)) {
+				
+				copiedOptions.setSourceRedditBQ(true);
+				
+				if (command.postsTable != null)
+					copiedOptions.setRedditPostsTableName(command.postsTable);
+				
+				if (command.postsQuery != null)
+					copiedOptions.setRedditPostsQuery(command.postsQuery);
+
+				if (command.commentsTable != null)
+					copiedOptions.setRedditCommentsTableName(command.commentsTable);
+				
+				if (command.commentsQuery != null)
+					copiedOptions.setRedditCommentsQuery(command.commentsQuery);
+				
+				copiedOptions.setJobName(options.getJobName() + "-redditimport");
 			
 			}
 
 		    Pipeline pipeline = IndexerPipeline.createIndexerPipeline(copiedOptions); 
-
-			LOG.info("Starting Job "+copiedOptions.getJobName());
+			LOG.info("Starting Job " + copiedOptions.getJobName());
 			pipeline.run();
 			
 		}		
@@ -200,9 +283,8 @@ public class ControlPipeline {
 
 			if (!command.command.equals(PipelineCommand.START_SOCIAL_IMPORT)) 
 				return;
-
 			
-			IndexerPipelineOptions copiedOptions = createJobOptions(options);
+			IndexerPipelineOptions copiedOptions = createJobOptions(options, command);
 			
 			transferOptions(options, copiedOptions);
 
@@ -249,7 +331,7 @@ public class ControlPipeline {
 			if (!command.command.equals(PipelineCommand.START_STATS_CALC)) 
 				return;
 			
-			IndexerPipelineOptions copiedOptions = createJobOptions(options);
+			IndexerPipelineOptions copiedOptions = createJobOptions(options, command);
 			
 			transferOptions(options, copiedOptions);
 
@@ -264,8 +346,8 @@ public class ControlPipeline {
 			if (command.days != null)
 				copiedOptions.setStatsCalcDays(command.days);
 
+			
 		    Pipeline pipeline = StatsCalcPipeline.createStatsCalcPipeline(copiedOptions); 
-
 			LOG.info("Starting Job "+copiedOptions.getJobName());
 			pipeline.run();
 			
@@ -281,10 +363,19 @@ public class ControlPipeline {
 			if (controlOptions.getJobAutoscalingAlgorithm() != null)
 				jobOptions.setAutoscalingAlgorithm(DataflowPipelineWorkerPoolOptions.AutoscalingAlgorithmType.valueOf(
 						controlOptions.getJobAutoscalingAlgorithm()));
+			if (controlOptions.getJobWorkerMachineType() != null)
+				jobOptions.setWorkerMachineType(controlOptions.getJobWorkerMachineType());
+			if (controlOptions.getJobDiskSizeGb() != null)
+				jobOptions.setDiskSizeGb(controlOptions.getJobDiskSizeGb());
+			if (controlOptions.getJobStagingLocation() != null)
+				jobOptions.setStagingLocation(controlOptions.getJobStagingLocation());
+			else
+				jobOptions.setStagingLocation(controlOptions.getStagingLocation());
+			
 		}
 
 		
-		private IndexerPipelineOptions createJobOptions(ControlPipelineOptions options) throws Exception {
+		private IndexerPipelineOptions createJobOptions(ControlPipelineOptions options, PipelineCommand command) throws Exception {
 			IndexerPipelineOptions result = PipelineOptionsFactory.as(IndexerPipelineOptions.class);
 			
 			/* CloneAs kept failing with error 
@@ -295,13 +386,15 @@ public class ControlPipeline {
 			//IndexerPipelineOptions copiedOptions = options.cloneAs(IndexerPipelineOptions.class);
 
 			
-			// copy the options of the IndexerPipelineOptions interface
+			// TODO: Is this still necessary? This will be overwritten anyways
 			if (options.isSourcePubsub() != null)
 				result.setSourcePubsub(options.isSourcePubsub());
 			if (options.isSourceJDBC() != null)
 				result.setSourceJDBC(options.isSourceJDBC());
 			if (options.isSourceRecordFile() != null)
 				result.setSourceRecordFile(options.isSourceRecordFile());
+			
+			// copy the default options of the IndexerPipelineOptions interface
 			if (options.getInputFile() != null)
 				result.setInputFile(options.getInputFile());
 			if (options.getPubsubTopic() != null)
@@ -337,20 +430,35 @@ public class ControlPipeline {
 
 		    if (options.getStatsCalcDays() != null)
 		    	result.setStatsCalcDays(options.getStatsCalcDays());
-			
+
+			if (options.getRedditPostsTableName() != null)
+				result.setRedditPostsTableName(options.getRedditPostsTableName());
+
+			if (options.getRedditCommentsTableName() != null)
+				result.setRedditCommentsTableName(options.getRedditCommentsTableName());
+
+			if (options.getRedditPostsQuery() != null)
+				result.setRedditPostsQuery(options.getRedditPostsQuery());
+
+			if (options.getRedditCommentsQuery() != null)
+				result.setRedditCommentsQuery(options.getRedditCommentsQuery());
+
 			// Other options
 			if (options.getProject() != null)
 				result.setProject(options.getProject());
-			
-			if (options.getStagingLocation() != null)
-				result.setStagingLocation(options.getStagingLocation());
-			
+
+			/*
+			 *  Staging location will be set in transferOptions
+			 */
+
 			if (options.getTempLocation() != null)
 				result.setTempLocation(options.getTempLocation());
-						
+			
+			if (options.getFilesToStage() != null)
+				result.setFilesToStage(options.getFilesToStage());
+			
 			result.setRunner(options.getRunner());
 			result.setJobName(options.getJobName());
-			result.setAppName(options.getAppName());
 			
 			if (options.getCredentialFactoryClass() != null)
 				result.setCredentialFactoryClass(options.getCredentialFactoryClass());
