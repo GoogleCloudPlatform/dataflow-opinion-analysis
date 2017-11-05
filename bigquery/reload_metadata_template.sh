@@ -12,16 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+PROJECT_ID=$(gcloud config list --format 'value(core.project)' 2>/dev/null);
 DATASET_ID=${DATASET_ID:-"opinions"}
+GCS_BUCKET="replace_with_bucket"
 
-echo "Creating the dataset"
-bq mk $DATASET_ID
-
-echo "Beginning to build tables"
-./build_tables.sh mk
-echo "Finished building tables"
-
-echo "Beginning to build views"
-./build_views.sh mk
-echo "Finished building views"
-
+gsutil cp topicData.csv gs://$GCS_BUCKET/temp/
+bq load --skip_leading_rows=1 $DATASET_ID.topic gs://$GCS_BUCKET/temp/topicData.csv topicSchema.json

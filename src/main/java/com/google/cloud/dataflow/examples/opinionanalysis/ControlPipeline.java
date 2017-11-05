@@ -431,6 +431,9 @@ public class ControlPipeline {
 		    if (options.getStatsCalcDays() != null)
 		    	result.setStatsCalcDays(options.getStatsCalcDays());
 
+		    if (options.getStatsCalcTables() != null)
+		    	result.setStatsCalcTables(options.getStatsCalcTables());
+		    
 			if (options.getRedditPostsTableName() != null)
 				result.setRedditPostsTableName(options.getRedditPostsTableName());
 

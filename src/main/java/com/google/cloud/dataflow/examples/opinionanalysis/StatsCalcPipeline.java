@@ -30,6 +30,7 @@ import org.apache.beam.sdk.transforms.ParDo;
 
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -63,24 +64,77 @@ public class StatsCalcPipeline {
 	    StatsCalcPipelineUtils.validateStatsCalcPipelineOptions(options);
 		
 		Pipeline pipeline = Pipeline.create(options);
+		ArrayList<String> statFullQueryBatch = new ArrayList<String>();
+		
+		List<String> tablesToCalculateList = (options.getStatsCalcTables() == null) ? 
+			Arrays.asList(StatsCalcPipelineUtils.allStatsCalcTables) :
+			Arrays.asList(options.getStatsCalcTables());	
+				
+		/*
+		 TODO: Reimplement parallel processing
+		 Tree of dependencies:
+		 	stattopic: not dependent on any stat tables
+			statstoryimpact: not dependent on any stat tables
+			statdomainopinions: not dependent on any stat tables
+			statstoryrank: depends on statstoryimpact
+			stattoptopic7d: depends on stattopic
+			stattopstory7d: depends on stattoptopic7d, statstoryrank	
+			stattoptopic7dsentiment: depends on stattoptopic7d, stattopic
+		 */
 		
 		// Build an array of SQL statements to run sequentially in order to update the StatTopic table
-		String[] statTopicQueryBatch = StatsCalcPipelineUtils.buildStatsCalcQueries(
-				options.getStatsCalcDays(), options.getStatsCalcFromDate(), options.getStatsCalcToDate(), 
-				options.getBigQueryDataset(), StatsCalcPipelineUtils.getStatTopicQueryGenerator());
+		addSQLQueriesForStatTable(tablesToCalculateList, "stattopic", 
+				StatsCalcPipelineUtils.getStatTopicQueryGenerator(), statFullQueryBatch, options);
 		
-		addSQLCommandTransform(statTopicQueryBatch, pipeline);
-			
-		// Build an array of SQL statements to run sequentially in order to update the StatStoryImpact table
-		String[] statStoryImpactQueryBatch = StatsCalcPipelineUtils.buildStatsCalcQueries(
-				options.getStatsCalcDays(), options.getStatsCalcFromDate(), options.getStatsCalcToDate(), 
-				options.getBigQueryDataset(), StatsCalcPipelineUtils.getStatStoryImpactQueryGenerator());
 		
-		addSQLCommandTransform(statStoryImpactQueryBatch, pipeline);
+		// Update StatStoryImpact table
+		addSQLQueriesForStatTable(tablesToCalculateList, "statstoryimpact", 
+				StatsCalcPipelineUtils.getStatStoryImpactQueryGenerator(), statFullQueryBatch, options);
+
+		
+		// Update StatDomainOpinions table
+		addSQLQueriesForStatTable(tablesToCalculateList, "statdomainopinions", 
+				StatsCalcPipelineUtils.getStatDomainOpinionsQueryGenerator(), statFullQueryBatch, options);
+
+		
+		// Update StatStoryRank table
+		addSQLQueriesForStatTable(tablesToCalculateList, "statstoryrank", 
+				StatsCalcPipelineUtils.getStatStoryRankQueryGenerator(), statFullQueryBatch, options);
+
+		// Update StatTopTopic7d table
+		addSQLQueriesForStatTable(tablesToCalculateList, "stattoptopic7d", 
+				StatsCalcPipelineUtils.getStatTopTopic7dQueryGenerator(), statFullQueryBatch, options);
+
+		// Update StatTopStory7d table
+		addSQLQueriesForStatTable(tablesToCalculateList, "stattopstory7d", 
+				StatsCalcPipelineUtils.getStatTopStory7dQueryGenerator(), statFullQueryBatch, options);
+
+		// Update StatTopTopic7dSentiment table
+		addSQLQueriesForStatTable(tablesToCalculateList, "stattoptopic7dsentiment", 
+				StatsCalcPipelineUtils.getStatTopTopic7dSentimentQueryGenerator(), statFullQueryBatch, options);
+
+		
+		//addSQLCommandTransform(statStoryImpactQueryBatch, pipeline);
+		String[] batch = new String[statFullQueryBatch.size()];
+		statFullQueryBatch.toArray(batch);
+		addSQLCommandTransform(batch, pipeline);
 		
 		return pipeline;
 	}	
 
+	private static void addSQLQueriesForStatTable(
+		List<String> tablesToCalculateList, String table, StatsCalcPipelineUtils.StatsQueryGenerator gen, 
+		List<String> fullBatch, IndexerPipelineOptions options) throws Exception {
+		
+		if (tablesToCalculateList.contains(table)) {	
+			String[] tableQueryBatch = StatsCalcPipelineUtils.buildStatsCalcQueries(
+					options.getStatsCalcDays(), options.getStatsCalcFromDate(), options.getStatsCalcToDate(), 
+					options.getBigQueryDataset(), gen);
+			
+			fullBatch.addAll(Arrays.asList(tableQueryBatch));
+		}
+		
+	}
 	
 	private static void addSQLCommandTransform(String[] queryBatch, Pipeline pipeline) {
 
@@ -90,7 +144,6 @@ public class StatsCalcPipeline {
 		pipeline
 			.apply(Create.of(sqlCommands)).setCoder(AvroCoder.of(String[].class))
 			.apply(ParDo.of(new ExecuteSQLCommandBatch()));
-		
 		
 	}
 
@@ -115,19 +168,33 @@ public class StatsCalcPipeline {
 				QueryResponse response = bigquery.query(queryRequest);
 				 // Wait for previous query to finish
 				Boolean done = response.jobCompleted();
+				int retriesLeft = 10;
 				while (!done) {
 					try {
 						Thread.sleep(1000);
 						JobId jobId = response.getJobId();
 						response = bigquery.getQueryResults(jobId);
 						done = response.jobCompleted();
+					} catch (NullPointerException e) {
+						retriesLeft--;
+						LOG.warn("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement: NullPointerException when getting BigQuery results. Retries left: " + retriesLeft);
+						if (retriesLeft <= 0) {
+							LOG.warn("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement: NullPointerException when getting BigQuery results. Retries left: 0. Aborting this query " + query);
+							done = true;
+						}
 					} catch (InterruptedException e) {
-						LOG.warn(e.getMessage());
+						LOG.warn("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement:" + e.getMessage());
+						done = true;
+					} catch (Exception e) {
+						LOG.warn("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement: Exception " + e.getMessage());
+						LOG.warn("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement: error executing query "+ query);
 						done = true;
 					}
 				}
 				if (response.hasErrors()) {
-				   LOG.warn("StatsCalcPipeline.ExecuteSQLCommand: error executing query "+ query);
+					LOG.warn("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement: BigQuery task completed with a response containing errors while executing query: "+ query);
+				} else {
+					LOG.info("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement: BigQuery task completed with a response containing no [further] errors while executing query "+ query);
 				}
 		    
 		    }

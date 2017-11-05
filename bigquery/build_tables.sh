@@ -29,9 +29,16 @@ fi
 PROJECT_ID=$(gcloud config list --format 'value(core.project)' 2>/dev/null);
 DATASET_ID=${DATASET_ID:-"opinions"}
 
-bq $1 --schema=documentSchema.json -t $DATASET_ID.document
-bq $1 --schema=sentimentSchema.json $DATASET_ID.sentiment
-bq $1 --schema=statstoryimpactSchema.json $DATASET_ID.statstoryimpact
-bq $1 --schema=stattopicSchema.json $DATASET_ID.stattopic
-bq $1 --schema=webresourceSchema.json $DATASET_ID.webresource
-bq $1 --schema=wrsocialcountSchema.json $DATASET_ID.wrsocialcount
+bq $1 --schema=documentSchema.json --time_partitioning_type=DAY $DATASET_ID.document
+bq $1 --schema=sentimentSchema.json --time_partitioning_type=DAY $DATASET_ID.sentiment
+bq $1 --schema=webresourceSchema.json --time_partitioning_type=DAY $DATASET_ID.webresource
+bq $1 --schema=wrsocialcountSchema.json --time_partitioning_type=DAY $DATASET_ID.wrsocialcount
+bq $1 --schema=topicSchema.json $DATASET_ID.topic
+bq $1 --schema=statstoryimpactSchema.json --time_partitioning_type=DAY $DATASET_ID.statstoryimpact
+bq $1 --schema=stattopicSchema.json --time_partitioning_type=DAY $DATASET_ID.stattopic
+bq $1 --schema=statdomainopinionsSchema.json $DATASET_ID.statdomainopinions
+bq $1 --schema=statstoryrankSchema.json $DATASET_ID.statstoryrank
+bq $1 --schema=stattoptopic7dSchema.json $DATASET_ID.stattoptopic7d
+bq $1 --schema=stattopstory7dSchema.json $DATASET_ID.stattopstory7d
+bq $1 --schema=stattoptopic7dsentimentSchema.json $DATASET_ID.stattoptopic7dsentiment
+

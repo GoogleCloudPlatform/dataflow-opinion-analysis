@@ -1,0 +1,150 @@
+[
+    {
+        "mode": "NULLABLE",
+        "name": "Topic",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Domain",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "IsTop50Domain",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "IsTop500Domain",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "DomainTopicRank",
+        "type": "INTEGER",
+		"description": ""
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "IsTop20DomainTopic",
+        "type": "INTEGER",
+		"description": ""
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "IsTop100DomainTopic",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntTotalMentions",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Basic8Score",
+        "type": "FLOAT"
+    },
+
+    {
+        "mode": "NULLABLE",
+        "name": "MeanBasic8Ratio",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevBasic8Ratio",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "MeanStJoy",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevStJoy",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "MeanStAcceptance",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevStAcceptance",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "MeanStFear",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevStFear",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "MeanStSurprise",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevStSurprise",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "MeanStSadness",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevStSadness",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "MeanStDisgust",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevStDisgust",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "MeanStAnger",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevStAnger",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "MeanStAnticipation",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevStAnticipation",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "MeanSentimentRatio",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StdevSentimentRatio",
+        "type": "FLOAT"
+    }
+]

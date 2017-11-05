@@ -14,7 +14,7 @@
 
 	<groupId>com.google.cloud.dataflow</groupId>
 	<artifactId>examples-opinionanalysis</artifactId>
-	<version>0.4.0</version>
+	<version>0.5.1</version>
 
 	<packaging>jar</packaging>
 
@@ -245,7 +245,11 @@
 		<dependency>
 			<groupId>com.google.auth</groupId>
 			<artifactId>google-auth-library-oauth2-http</artifactId>
-			<version>0.6.1</version>
+			
+			<!-- TODO 10/29 bumping version to 0.7.0 from 0.6.1
+					Verify if stable  -->
+			<version>0.7.0</version>
+			
 			<exclusions>
 				<exclusion>
 					<groupId>com.google.guava</groupId>
@@ -296,7 +300,10 @@
 		<dependency>
 			<groupId>com.google.auth</groupId>
 			<artifactId>google-auth-library-credentials</artifactId>
-			<version>0.6.1</version>
+			
+			<!-- TODO 10/29 bumping version to 0.7.0 from 0.6.1
+					Verify if stable  -->
+			<version>0.7.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -353,7 +360,7 @@
 		<dependency>
 			<groupId>sirocco.sirocco-sa</groupId>
 			<artifactId>sirocco-sa</artifactId>
-			<version>1.0.1</version>
+			<version>1.0.6</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.avro</groupId>
@@ -387,7 +394,7 @@
 		<dependency>
 			<groupId>sirocco.sirocco-mo</groupId>
 			<artifactId>sirocco-mo</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.3</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -471,6 +478,13 @@
 					<artifactId>grpc-google-iam-v1</artifactId> 
 				</exclusion>
 				
+				
+				<!-- TODO 10/29 : verify whether to exclude the com.google.api:gax:0.0.25 version
+						included with BigQuery or the com.google.api:gax:1.3.1 version included with CNLP -->
+				<exclusion>
+					<groupId>com.google.api</groupId>
+					<artifactId>gax</artifactId> 
+				</exclusion>
 			</exclusions>
 		</dependency>
 
@@ -479,6 +493,46 @@
 			<artifactId>beam-sdks-java-io-jdbc</artifactId>
 			<version>2.0.0</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.google.cloud</groupId>
+			<artifactId>google-cloud-language</artifactId>
+			<version>0.20.0-beta</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.google.code.findbugs</groupId>
+					<artifactId>jsr305</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.guava</groupId>
+					<artifactId>guava</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.api</groupId>
+					<artifactId>api-common</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.auto.value</groupId>
+					<artifactId>auto-value</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>com.google.auth</groupId>
+					<artifactId>google-auth-library-credentials</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>joda-time</groupId>
+					<artifactId>joda-time</artifactId>
+				</exclusion>
+				<!-- TODO 10/29 : verify whether to exclude the google-cloud-core:0.8.0 version
+						included with BigQuery or the 1.2.0 version included with CNLP -->
+				<exclusion>
+					<groupId>com.google.cloud</groupId>
+					<artifactId>google-cloud-core</artifactId> 
+				</exclusion>
+				
+			</exclusions>	
+		</dependency>
+		
 
 		<!-- compile dependencies -->
 		<dependency>

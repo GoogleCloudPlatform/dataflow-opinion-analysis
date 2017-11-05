@@ -1,0 +1,89 @@
+[
+    {
+        "mode": "NULLABLE",
+        "name": "SnapshotDateId",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Topic",
+        "type": "STRING"
+    },
+    {
+        "mode": "REPEATED",
+        "name": "Tags",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "TagCount",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntOrigPublishers",
+        "type": "INTEGER",
+		"description": "Number of news outlets creating original news stories."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntRepostWRs",
+        "type": "INTEGER",
+		"description": "Number of URLs that reposted original news articles."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntPositives",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntNegatives",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntAmbiguous",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntGeneral",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "REPEATED",
+        "name": "OrigWebResourceHashes",
+        "type": "STRING"
+    },
+    {
+        "mode": "REPEATED",
+        "name": "RepostWebResourceHashes",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "SentimentRatio",
+        "type": "FLOAT"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "rankPubdomains",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "TimeMarker",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "IsTop20Topic",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "IsDominantTopic7d",
+        "type": "INTEGER"
+    }
+]

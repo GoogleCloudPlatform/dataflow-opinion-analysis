@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.google.cloud.dataflow.examples.opinionanalysis;
+package com.google.cloud.dataflow.examples.opinionanalysis.util;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
@@ -48,7 +48,7 @@ public class TextWithProperties {
 				continue;
 			}
 			
-			if (line.startsWith("#")) {
+			if (line.startsWith("#") || line.equals("")) {
 				lineConsumed = true;
 				continue;
 			}
@@ -65,10 +65,10 @@ public class TextWithProperties {
 				lineConsumed = false;
 			}
 		}
-		char[] caRest = new char[s.length()];
-		
+		char[] caRest = new char[s.length()]; // we don't know the size beforehand, but it can't be longer than the original s string
 		reader.read(caRest);
-		String remainingText = (!lineConsumed && line!=null?line+"\n":"") + new String(caRest);
+		String rest = (new String(caRest)).trim();
+		String remainingText = (!lineConsumed && line!=null?line+"\n":"") + rest;
 		this.text = remainingText;
 		
 		

@@ -1,0 +1,157 @@
+[
+    {
+        "mode": "NULLABLE",
+        "name": "SnapshotDateId",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "TimeMarker",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Topic",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "SentimentTotalScore",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "DominantValence",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Text",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "AnnotatedText",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "AnnotatedHtml",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StAcceptance",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StAnger",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StAnticipation",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StAmbiguous",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StDisgust",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StFear",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StGuilt",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StInterest",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StJoy",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StSadness",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StShame",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StSurprise",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StPositive",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StNegative",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StSentiment",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StProfane",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "StUnsafe",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Title",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Url",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Domain",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Author",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "IsTop20Topic",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "IsDominantTopic7d",
+        "type": "INTEGER"
+    }
+]

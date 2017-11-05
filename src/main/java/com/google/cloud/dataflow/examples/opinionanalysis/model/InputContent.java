@@ -23,8 +23,9 @@ import org.apache.beam.sdk.coders.DefaultCoder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineUtils;
-import com.google.cloud.dataflow.examples.opinionanalysis.TextWithProperties;
+import com.google.cloud.dataflow.examples.opinionanalysis.util.TextWithProperties;
 
+import sirocco.model.summary.Document;
 import sirocco.util.HashUtils;
 
 
@@ -159,9 +160,9 @@ public class InputContent {
 	
 	private void calculateHashFields()
 	{
-		this.expectedDocumentHash = ((this.pubTime != null) && (this.text !=null)) ? HashUtils.getSHA1HashBase64(pubTime + text) : null;
-		this.expectedWebResourceHash = ((this.pubTime != null) && (this.url !=null)) ? HashUtils.getSHA1HashBase64(pubTime + url) : null;
+		this.expectedDocumentHash = ((this.text !=null)) ? Document.calculateDocumentHash(this.text) : null;
+		this.expectedWebResourceHash = ((this.pubTime != null) && (this.url !=null)) ? HashUtils.getSHA1HashBase64(this.pubTime + this.url) : null;
 		this.expectedParentWebResourceHash = ((this.parentUrl != null && this.parentPubTime != null)) ? HashUtils.getSHA1HashBase64(this.parentPubTime + this.parentUrl) : null;
 	}
-	
+		
 }

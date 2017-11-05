@@ -51,7 +51,7 @@ public class RecordFileSource<T> extends FileBasedSource<T> {
   /** The separator to use to separate the records in a single file */
   private final byte separator;
 
-  public static final byte DEFAULT_RECORD_SEPARATOR = '\036'; // use ASCII Record Separator RS octal number 036
+  public static final byte DEFAULT_RECORD_SEPARATOR = '\036'; // use ASCII Record Separator RS octal number 036, decimal 30, hex 1E
 	
 	
   public RecordFileSource(ValueProvider<String> fileSpec, Coder<T> coder, byte separator) {

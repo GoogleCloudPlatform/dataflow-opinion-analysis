@@ -1,0 +1,47 @@
+[
+    {
+        "mode": "NULLABLE",
+        "name": "SnapshotDateId",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "WebResourceHash",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Title",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Url",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntDomains",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntFb",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "rankSocial",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "IsTop10Story",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Tags",
+        "type": "STRING"
+    }
+]

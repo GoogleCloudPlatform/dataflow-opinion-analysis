@@ -1,0 +1,14 @@
+[
+    {
+        "mode": "REQUIRED",
+        "name": "Topic",
+        "type": "STRING",
+		"description": "Topic, including multi-tag topics concatenated via &"
+    },
+    {
+        "mode": "REQUIRED",
+        "name": "IsBlocked",
+        "type": "INTEGER",
+		"description": "1 if Topic should not be considered for Top Topic and other calculations"
+    }
+]

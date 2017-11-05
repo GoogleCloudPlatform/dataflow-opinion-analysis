@@ -19,6 +19,8 @@ import java.util.Arrays;
 
 import org.apache.beam.sdk.options.Description;
 
+import com.google.cloud.dataflow.examples.opinionanalysis.util.TextWithProperties;
+
 public class PipelineCommand {
 
 	public String command;

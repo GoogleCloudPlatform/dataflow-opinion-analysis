@@ -164,11 +164,11 @@ Table schema definitions are located in the *Schema.json files in the `bigquery`
 
 If you would like to use this sample for deep textual analysis, download and install [Sirocco](https://github.com/datancoffee/sirocco), a framework maintained by [@datancoffee](https://medium.com/@datancoffee).
 
-* Download the [Sirocco Java framework](https://github.com/datancoffee/sirocco/releases/download/v1.0.0/sirocco-sa-1.0.0.jar) jar file.
+* Download the latest [Sirocco Java framework](https://github.com/datancoffee/sirocco/releases/) jar file.
 
-* Download the [Sirocco model](https://gist.github.com/datancoffee/4df233243723ab00874192257687f32c/raw/c652516fe451556b6c6cf60214333ecd736a421b/sirocco-mo-1.0.0.jar) file.
+* Download the latest [Sirocco model](https://gist.github.com/datancoffee/sirocco-mo/releases/) file.
 
-* Go to the directory where the downloaded sirocco-sa-1.0.0.jar and sirocco-mo-1.0.0.jar files are located.
+* Go to the directory where the downloaded sirocco-sa-x.y.z.jar and sirocco-mo-x.y.z.jar files are located.
 
 * Install the Sirocco framework in your local Maven repository
 
@@ -177,8 +177,8 @@ mvn install:install-file \
   -DgroupId=sirocco.sirocco-sa \
   -DartifactId=sirocco-sa \
   -Dpackaging=jar \
-  -Dversion=1.0.0 \
-  -Dfile=sirocco-sa-1.0.0.jar \
+  -Dversion=1.0.1 \
+  -Dfile=sirocco-sa-1.0.1.jar \
   -DgeneratePom=true
 ```
 

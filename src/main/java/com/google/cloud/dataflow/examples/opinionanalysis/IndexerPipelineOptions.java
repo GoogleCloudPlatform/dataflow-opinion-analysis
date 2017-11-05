@@ -106,6 +106,15 @@ public interface IndexerPipelineOptions extends DataflowPipelineOptions {
     String getBigQueryDataset();
     void setBigQueryDataset(String dataset);
     
+    @Description("Deduplicate based on text content")
+    Boolean getDedupeText();
+    void setDedupeText(Boolean dedupeText);
+
+    @Description("Text indexing option: Index as Short text or as an Article. Default: false")
+    @Default.Boolean(false)
+    Boolean getIndexAsShorttext();
+    void setIndexAsShorttext(Boolean indexAsShorttext);
+    
     @Description("Truncate sink BigQuery dataset before writing")
     @Default.Boolean(false)
     Boolean getWriteTruncate();
@@ -130,5 +139,14 @@ public interface IndexerPipelineOptions extends DataflowPipelineOptions {
     @Description("Stats Calc Days, as an array of string labels, e.g. T-1, T-2, ...")
     String[] getStatsCalcDays();
     void setStatsCalcDays(String[] days);
- 	
+
+    @Description("Stats Calc Tables, as an array of string table names, e.g. stattopic, statstoryimpact, ...")
+    String[] getStatsCalcTables();
+    void setStatsCalcTables(String[] tables);
+    
+    @Description("Bigtable IndexerAdminDB instance for Dead Letter log and config")
+    @Default.String("indexer-admindb-01")
+    String getBigtableIndexerAdminDB();
+    void setBigtableIndexerAdminDB(String instance);
+
 }

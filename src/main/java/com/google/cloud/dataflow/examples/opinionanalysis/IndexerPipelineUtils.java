@@ -15,31 +15,33 @@
  *******************************************************************************/
 package com.google.cloud.dataflow.examples.opinionanalysis;
 
-//import com.google.api.client.googleapis.json.GoogleJsonResponseException;
-//import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
-//import com.google.api.services.bigquery.Bigquery;
 import com.google.api.services.bigquery.model.TableRow;
-//import com.google.api.services.pubsub.Pubsub;
-//import com.google.api.client.googleapis.util.Utils;
+import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipeline.FilterProcessedUrls;
+import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipeline.GetUrlFn;
 import com.google.cloud.dataflow.examples.opinionanalysis.model.InputContent;
 
-//import org.apache.beam.runners.dataflow.DataflowRunner;
-//import org.apache.beam.runners.direct.DirectRunner;
-//import org.apache.beam.sdk.options.BigQueryOptions;
+import org.apache.beam.sdk.Pipeline;
+import org.apache.beam.sdk.coders.AvroCoder;
+import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
+import org.apache.beam.sdk.io.jdbc.JdbcIO;
+import org.apache.beam.sdk.io.jdbc.JdbcIO.Read;
+import org.apache.beam.sdk.io.jdbc.JdbcIO.RowMapper;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-//import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
+import org.apache.beam.sdk.transforms.View;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
-//import org.apache.beam.sdk.util.Transport;
 import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
+import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 
 import sirocco.util.IdConverterUtils;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 
 import org.joda.time.DateTime;
@@ -47,7 +49,6 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-//import javax.servlet.http.HttpServletResponse;
 
 /**
  *
@@ -80,6 +81,12 @@ public class IndexerPipelineUtils {
 	public static final DateTimeFormatter dateTimeFormatYMD_T_HMS_Z = DateTimeFormat
 			.forPattern("yyyyMMdd'T'HHmmss'Z'");
 	
+	// Bigtable Dead Letter table and columns
+	public static final String DEAD_LETTER_TABLE = "unprocessed-documents";
+	public static final String DEAD_LETTER_TABLE_ERR_CF = "err";
+	
+	// Integration with Cloud NLP
+	public static final String CNLP_TAG_PREFIX = "cnlp::";
 	
 	// TODO: Move the date parsing functions to DateUtils
 	public static DateTime parseDateString(DateTimeFormatter formatter, String s) {
@@ -212,6 +219,27 @@ public class IndexerPipelineUtils {
 		return result;
 	}
 
+	public static String buildBigQueryProcessedDocsQuery(IndexerPipelineOptions options) {
+		String timeWindow = null;
+
+		if (options.getProcessedUrlHistorySec() != null) {
+			if (options.getProcessedUrlHistorySec() != Integer.MAX_VALUE) {
+				Instant fromTime = Instant.now();
+				fromTime = fromTime.minus(options.getProcessedUrlHistorySec() * 1000L);
+				Integer fromDateId = IdConverterUtils.getDateIdFromTimestamp(fromTime.getMillis());
+				timeWindow = "PublicationDateId >= " + fromDateId;
+			}
+		}
+
+		if (timeWindow != null)
+			timeWindow = "WHERE " + timeWindow;
+
+		String result = "SELECT DocumentHash, MAX(ProcessingTime) AS ProcessingTime\n" + "FROM " + options.getBigQueryDataset()
+				+ "." + DOCUMENT_TABLE + "\n" + timeWindow + "\n" + "GROUP BY DocumentHash";
+
+		return result;
+	}
+
 	public static String buildBigQueryProcessedSocialCountsQuery(IndexerPipelineOptions options) {
 		String timeWindow = null;
 
@@ -311,6 +339,10 @@ public class IndexerPipelineUtils {
 						"Input file path pattern needs to be specified when reading from GDELT bucket.");
 		}
 
+		if (options.getDedupeText() == null) {
+			options.setDedupeText(options.isSourceGDELTbucket());
+		}
+		
 		if (options.getBigQueryDataset().isEmpty()) {
 			throw new IllegalArgumentException("Sink BigQuery dataset needs to be specified.");
 		}
@@ -365,125 +397,17 @@ public class IndexerPipelineUtils {
 
 	}
 
-	/**
-	 * Join two collections, using post id as the join key Sample:
-	 * https://github.com/GoogleCloudPlatform/DataflowJavaSDK-examples/blob/master/src/main/java/com/google/cloud/dataflow/examples/cookbook/JoinExamples.java
-	 */
-	public static PCollection<InputContent> joinRedditPostsAndComments(PCollection<TableRow> posts,
-			PCollection<TableRow> comments) throws Exception {
 
-		final TupleTag<TableRow> postInfoTag = new TupleTag<TableRow>();
-		final TupleTag<TableRow> commentInfoTag = new TupleTag<TableRow>();
-
-		// transform both input collections to tuple collections, where the keys
-		// are the post-id
-		PCollection<KV<String, TableRow>> postInfo = posts.apply(ParDo.of(new ExtractPostDataFn()));
-		PCollection<KV<String, TableRow>> commentInfo = comments.apply(ParDo.of(new ExtractCommentInfoFn()));
-
-		PCollection<KV<String, CoGbkResult>> kvpCollection = KeyedPCollectionTuple.of(postInfoTag, postInfo)
-				.and(commentInfoTag, commentInfo).apply(CoGroupByKey.<String>create());
-
-		// Process the CoGbkResult elements generated by the CoGroupByKey
-		// transform.
-		PCollection<InputContent> finalResultCollection = kvpCollection.apply(
-				"Create InputContent from Posts and Comments",
-				ParDo.of(new DoFn<KV<String, CoGbkResult>, InputContent>() {
-					@ProcessElement
-					public void processElement(ProcessContext c) {
-						KV<String, CoGbkResult> e = c.element();
-
-						// The CoGbkResult element contains all the data
-						// associated with each unique key
-						// from any of the input collections.
-						String postId = e.getKey();
-
-						// While we are expecting exactly one post record per
-						// key, do some error handling here.
-						TableRow post = e.getValue().getOnly(postInfoTag, null);
-						if (post == null)
-							return;
-
-						// create a list that will hold all InputContent records
-						ArrayList<InputContent> postAndCommentList = new ArrayList<InputContent>();
-
-						String postPermalink = post.get("permalink").toString();
-						Long postPubTime = extractRedditTime(post.get("created_utc").toString());
-						
-						/*
-						 * sso 7/10/2017: Changing postUrl to the "url" field, which will contain the external 
-						 * url or the article being discussed
-						 */
-						//String postUrl = buildRedditPostUrl(postPermalink);
-						String postUrl = post.get("url").toString();
-						
-						// Create the first InputContent for the post item itself
-						InputContent icPost = new InputContent(/* url */ postUrl, /* pubTime */ postPubTime,
-								/* title */ post.get("title").toString(), /* author */ post.get("author").toString(),
-								/* language */ null, /* text */ post.get("selftext").toString(),
-								/* documentCollectionId */ DOC_COL_ID_REDDIT_FH_BIGQUERY, /* collectionItemId */ postId,
-								/* skipIndexing */ 0, /* parentUrl */ null, // the post record will become the beginning of the thread
-								/* parentPubTime */ null);
-
-						postAndCommentList.add(icPost);
-
-						// Build a map of Url and Publication Time for the post
-						// and each comment
-						HashMap<String, Long> pubTimes = new HashMap<String, Long>();
-						// seed it with the post, which will be the parent of
-						// some of the comments
-						// in the chain
-						pubTimes.put(postUrl, postPubTime);
-
-						// Take advantage of the fact that all comments of a
-						// post are local to this code
-						// and build a map of pub times for each comment
-						Iterable<TableRow> commentsOfPost = e.getValue().getAll(commentInfoTag);
-						for (TableRow comment : commentsOfPost) {
-
-							String commentUrl = buildRedditCommentUrl(postPermalink, comment.get("id").toString());
-							Long commentPubTime = extractRedditTime(comment.get("created_utc").toString());
-							String commentId = "t1_" + comment.get("id").toString();
-
-							String parentId = comment.get("parent_id").toString();
-							String parentUrl = (parentId.startsWith("t1_"))
-									? buildRedditCommentUrl(postPermalink, comment.get("id").toString()) : postUrl;
-
-							InputContent icComment = new InputContent(/* url */ commentUrl,
-									/* pubTime */ commentPubTime, /* title */ null,
-									/* author */ comment.get("author").toString(), /* language */ null,
-									/* text */ comment.get("body").toString(),
-									/* documentCollectionId */ DOC_COL_ID_REDDIT_FH_BIGQUERY,
-									/* collectionItemId */ commentId, /* skipIndexing */ 0, /* parentUrl */ parentUrl,
-									/* parentPubTime */ null // don't set time yet, because we might not have read that record yet
-							);
-
-							pubTimes.put(commentUrl, commentPubTime); // save the pub time of the current comment
-							postAndCommentList.add(icComment); // add comment to the list
-						}
-
-						// iterate through all posts and comments and populate
-						// the Parent pub times
-						for (InputContent ic : postAndCommentList) {
-							if (ic.parentUrl != null)
-								ic.parentPubTime = pubTimes.get(ic.parentUrl);
-							c.output(ic);
-						}
-
-					}
-				}));
-
-		return finalResultCollection;
-	}
-
+	
 	private static String buildRedditPostUrl(String permalink) {
 		return REDDIT_URL + permalink;
 	}
 
-	private static String buildRedditCommentUrl(String postPermalink, String commentId) {
+	public static String buildRedditCommentUrl(String postPermalink, String commentId) {
 		return REDDIT_URL + postPermalink + commentId + "/";
 	}
 
-	private static Long extractRedditTime(String createdUtcString) {
+	public static Long extractRedditTime(String createdUtcString) {
 		Integer i = Integer.decode(createdUtcString);
 		return (i * 1000L);
 	}

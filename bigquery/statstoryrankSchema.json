@@ -1,0 +1,77 @@
+[
+    {
+        "mode": "NULLABLE",
+        "name": "DocumentHash",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "PublicationDateId",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "PubMonth",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "PubWeek",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Title",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Url",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Domain",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Author",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "rankWeekly",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "rankMonthly",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntWRs",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntDomains",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntFb",
+        "type": "INTEGER"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Domains",
+        "type": "STRING"
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "Urls",
+        "type": "STRING"
+    }
+]

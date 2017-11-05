@@ -20,6 +20,7 @@ import com.google.api.services.bigquery.model.TableReference;
 import com.google.api.services.bigquery.model.TableRow;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.cloud.dataflow.examples.opinionanalysis.model.WebresourceSocialCount;
+import com.google.cloud.dataflow.examples.opinionanalysis.util.PartitionedTableRef;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.coders.AvroCoder;
@@ -146,10 +147,10 @@ public class SocialStatsPipeline {
 		
 		wrSocialCounts
 			.apply("Write to wrsocialcount", BigQueryIO
-				.writeTableRows() 
+				.writeTableRows()
+				.to(getWRSocialCountTableReference(options))
 				.withSchema(getWrSocialCountSchema())
-				.withWriteDisposition(dispo)
-				.to(getWRSocialCountTableReference(options))); 
+				.withWriteDisposition(dispo)); 
 		
 
 		return pipeline;
@@ -221,12 +222,14 @@ public class SocialStatsPipeline {
 	 */	
 	
 
-	private static TableReference getWRSocialCountTableReference(IndexerPipelineOptions options) {
-		TableReference tableRef = new TableReference();
-		tableRef.setProjectId(options.getProject());
-		tableRef.setDatasetId(options.getBigQueryDataset());
-		tableRef.setTableId(IndexerPipelineUtils.WRSOCIALCOUNT_TABLE);
-		return tableRef;
+	private static PartitionedTableRef getWRSocialCountTableReference(IndexerPipelineOptions options) {
+		
+		return PartitionedTableRef.perDay(
+			options.getProject(), options.getBigQueryDataset(),
+			IndexerPipelineUtils.WRSOCIALCOUNT_TABLE,
+			"WrPublicationDateId", false);
+
+		
 	}
 	
 
