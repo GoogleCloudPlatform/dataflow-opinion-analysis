@@ -106,6 +106,10 @@ public interface IndexerPipelineOptions extends DataflowPipelineOptions {
     String getBigQueryDataset();
     void setBigQueryDataset(String dataset);
     
+	@Description("Sink GCS output file")
+    String getOutputFile();
+    void setOutputFile(String value);
+    
     @Description("Deduplicate based on text content")
     Boolean getDedupeText();
     void setDedupeText(Boolean dedupeText);
@@ -144,9 +148,13 @@ public interface IndexerPipelineOptions extends DataflowPipelineOptions {
     String[] getStatsCalcTables();
     void setStatsCalcTables(String[] tables);
     
-    @Description("Bigtable IndexerAdminDB instance for Dead Letter log and config")
-    @Default.String("indexer-admindb-01")
+    @Description("Set the Bigtable IndexerAdminDB instance for Dead Letter log and config")
     String getBigtableIndexerAdminDB();
     void setBigtableIndexerAdminDB(String instance);
 
+    @Description("Ratio of elements to enrich with CNLP data")
+    Float getRatioEnrichWithCNLP();
+    void setRatioEnrichWithCNLP(Float ratio);
+    
+    
 }

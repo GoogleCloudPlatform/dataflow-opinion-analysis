@@ -74,5 +74,11 @@
         "name": "ParentWebResourceHash",
         "type": "STRING",
         "description" : "(Optional) In threaded conversations, the parent is the previous comment, email, or document"
+    },
+    {
+        "mode": "REPEATED",
+        "name": "MetaFields",
+        "type": "STRING",
+        "description" : "(Optional) Source-specific metadata fields accessible via SAFE_OFFSET(0-base index). Review docs for source-specific index mappings."
     }
 ]

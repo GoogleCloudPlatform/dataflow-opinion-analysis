@@ -62,16 +62,19 @@ public class InputContent {
 	public String expectedWebResourceHash;
 	@Nullable
 	public String expectedParentWebResourceHash;
+	@Nullable
+	public String[] metaFields;
+	
 
 	public InputContent() {}
 
 	public InputContent(String url, Long pubTime, String title, String author, String language, String text, 
 			String documentCollectionId, String collectionItemId, Integer skipIndexing) {
-		this( url,  pubTime,  title,  author,  language,  text, documentCollectionId,  collectionItemId, skipIndexing, null, null);
+		this( url,  pubTime,  title,  author,  language,  text, documentCollectionId,  collectionItemId, skipIndexing, null, null, null);
 	}
 	
 	public InputContent(String url, Long pubTime, String title, String author, String language, String text, 
-			String documentCollectionId, String collectionItemId, Integer skipIndexing, String parentUrl, Long parentPubTime) {
+			String documentCollectionId, String collectionItemId, Integer skipIndexing, String parentUrl, Long parentPubTime, String[] metaFields) {
 		this.url = url;
 		this.pubTime = pubTime;
 		this.title = title;
@@ -83,6 +86,7 @@ public class InputContent {
 		this.skipIndexing = skipIndexing;
 		this.parentUrl = parentUrl;
 		this.parentPubTime = parentPubTime;
+		this.metaFields = metaFields;
 		
 		this.calculateHashFields();
 	}
@@ -149,7 +153,6 @@ public class InputContent {
 		result.documentCollectionId = IndexerPipelineUtils.DOC_COL_ID_GDELT_BUCKET;
 		result.collectionItemId = node.get("gkgoffsets").asText();
 		
-		
 		result.skipIndexing = 0;
 
 		result.calculateHashFields();
@@ -160,7 +163,7 @@ public class InputContent {
 	
 	private void calculateHashFields()
 	{
-		this.expectedDocumentHash = ((this.text !=null)) ? Document.calculateDocumentHash(this.text) : null;
+		this.expectedDocumentHash = Document.calculateDocumentHash(this.text,this.documentCollectionId,this.collectionItemId);
 		this.expectedWebResourceHash = ((this.pubTime != null) && (this.url !=null)) ? HashUtils.getSHA1HashBase64(this.pubTime + this.url) : null;
 		this.expectedParentWebResourceHash = ((this.parentUrl != null && this.parentPubTime != null)) ? HashUtils.getSHA1HashBase64(this.parentPubTime + this.parentUrl) : null;
 	}

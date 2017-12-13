@@ -65,6 +65,8 @@ public class IndexerPipelineUtils {
 	public static final String DOC_COL_ID_KGA = "01";
 	public static final String DOC_COL_ID_REDDIT_FH_BIGQUERY = "02";
 	public static final String DOC_COL_ID_GDELT_BUCKET = "03";
+	public static final String DOC_COL_ID_CSV_FILE = "04";
+	
 
 	// Reddit domain url
 	public static final String REDDIT_URL = "https://www.reddit.com";
@@ -87,6 +89,17 @@ public class IndexerPipelineUtils {
 	
 	// Integration with Cloud NLP
 	public static final String CNLP_TAG_PREFIX = "cnlp::";
+	
+	// Metafields constants
+	public static final int METAFIELDS_REDDIT_NUM_FIELDS = 5;
+	public static final int METAFIELDS_REDDIT_EXTERNALLINK_IDX = 0;
+	public static final int METAFIELDS_REDDIT_SUBREDDIT_IDX = 1;
+	public static final int METAFIELDS_REDDIT_SCORE_IDX = 2;
+	public static final int METAFIELDS_REDDIT_POSTID_IDX = 3;
+	public static final int METAFIELDS_REDDIT_DOMAIN_IDX = 4;
+	
+	
+	public static final String METAFIELDS_VALUE_UNVAILABLE = "unavailable";
 	
 	// TODO: Move the date parsing functions to DateUtils
 	public static DateTime parseDateString(DateTimeFormatter formatter, String s) {
@@ -139,6 +152,15 @@ public class IndexerPipelineUtils {
 			r.set(field, value);
 	}
 
+	public static String getTableRowStringFieldIfNotNull(TableRow r, String field) {
+		Object value = r.get(field);
+		if (value != null)
+			return value.toString();
+		else
+			return null;
+	}
+
+	
 	public static String buildJdbcSourceImportQuery(IndexerPipelineOptions options) {
 		String timeWindow = null;
 		if (!(options.getJdbcSourceFromDate() == null || options.getJdbcSourceFromDate().isEmpty()))
@@ -343,8 +365,8 @@ public class IndexerPipelineUtils {
 			options.setDedupeText(options.isSourceGDELTbucket());
 		}
 		
-		if (options.getBigQueryDataset().isEmpty()) {
-			throw new IllegalArgumentException("Sink BigQuery dataset needs to be specified.");
+		if ( (options.getBigQueryDataset() == null) && (options.getOutputFile() == null)) {
+			throw new IllegalArgumentException("Either Sink BigQuery dataset or Output file need to be specified.");
 		}
 
 		if (options.isSourcePubsub()) {
@@ -353,12 +375,10 @@ public class IndexerPipelineUtils {
 			options.setStreaming(false);
 		}
 
-		/*
-		if (options.isSourcePubsub()) {
-			setupPubsubTopic(options);
+		if (options.getRatioEnrichWithCNLP() == null) {
+			Float cnlpRatio = options.isStreaming() ? 1.0F : 0.01F;
+			options.setRatioEnrichWithCNLP(cnlpRatio);
 		}
-		*/
-		//setupRunner(options);
 
 	}
 
@@ -399,7 +419,7 @@ public class IndexerPipelineUtils {
 
 
 	
-	private static String buildRedditPostUrl(String permalink) {
+	public static String buildRedditPostUrl(String permalink) {
 		return REDDIT_URL + permalink;
 	}
 
@@ -412,6 +432,58 @@ public class IndexerPipelineUtils {
 		return (i * 1000L);
 	}
 
+	public static String[] extractRedditPostMetaFields(TableRow post) {
+		String[] result = new String[METAFIELDS_REDDIT_NUM_FIELDS];
+		
+		String domain = post.get("domain").toString();
+		if (!domain.startsWith("self.")) {
+			result[METAFIELDS_REDDIT_EXTERNALLINK_IDX] = post.get("url").toString();
+			result[METAFIELDS_REDDIT_DOMAIN_IDX] = domain;
+		} else {
+			result[METAFIELDS_REDDIT_EXTERNALLINK_IDX] = METAFIELDS_VALUE_UNVAILABLE;
+			result[METAFIELDS_REDDIT_DOMAIN_IDX] = METAFIELDS_VALUE_UNVAILABLE;
+		}
+		Object oSubreddit = post.get("subreddit");
+		if (oSubreddit != null)
+			result[METAFIELDS_REDDIT_SUBREDDIT_IDX] = oSubreddit.toString();
+		else 
+			result[METAFIELDS_REDDIT_SUBREDDIT_IDX] = METAFIELDS_VALUE_UNVAILABLE;
+			
+		result[METAFIELDS_REDDIT_SCORE_IDX] = post.get("score").toString();
+		result[METAFIELDS_REDDIT_POSTID_IDX] = extractPostIdFromRedditPost(post);
+		
+		return result;
+	}
+	
+	public static String[] extractRedditCommentMetaFields(TableRow comment) {
+		
+		String[] result = new String[METAFIELDS_REDDIT_NUM_FIELDS];
+		
+		result[METAFIELDS_REDDIT_EXTERNALLINK_IDX] = METAFIELDS_VALUE_UNVAILABLE;
+		result[METAFIELDS_REDDIT_DOMAIN_IDX] = METAFIELDS_VALUE_UNVAILABLE;
+		
+		Object oSubreddit = comment.get("subreddit");
+		if (oSubreddit != null)
+			result[METAFIELDS_REDDIT_SUBREDDIT_IDX] = oSubreddit.toString();
+		else
+			result[METAFIELDS_REDDIT_SUBREDDIT_IDX] = METAFIELDS_VALUE_UNVAILABLE;
+		
+		result[METAFIELDS_REDDIT_SCORE_IDX] = comment.get("score").toString();
+		result[METAFIELDS_REDDIT_POSTID_IDX] = extractPostIdFromRedditComment(comment);
+		
+		return result;
+		
+	}
+	
+	public static String extractPostIdFromRedditPost(TableRow post) {
+		return "t3_" + (String) post.get("id");
+	}
+
+	public static String extractPostIdFromRedditComment(TableRow comment) {
+		return (String) comment.get("link_id");
+		// link_id in comments is already in the format t3_<postId>
+	}
+	
 	/**
 	 * Extracts the post id from the post record.
 	 */
@@ -419,8 +491,7 @@ public class IndexerPipelineUtils {
 		@ProcessElement
 		public void processElement(ProcessContext c) {
 			TableRow row = c.element();
-			String postId = (String) row.get("id");
-			postId = "t3_" + postId;
+			String postId = IndexerPipelineUtils.extractPostIdFromRedditPost(row);
 			c.output(KV.of(postId, row));
 		}
 	}
@@ -432,8 +503,7 @@ public class IndexerPipelineUtils {
 		@ProcessElement
 		public void processElement(ProcessContext c) {
 			TableRow row = c.element();
-			String postId = (String) row.get("link_id");
-			// link_id in comments is already in the format t3_<postId>
+			String postId = extractPostIdFromRedditComment(row);
 			c.output(KV.of(postId, row));
 		}
 	}

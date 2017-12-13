@@ -14,7 +14,7 @@
 
 	<groupId>com.google.cloud.dataflow</groupId>
 	<artifactId>examples-opinionanalysis</artifactId>
-	<version>0.5.1</version>
+	<version>0.6.1</version>
 
 	<packaging>jar</packaging>
 
@@ -360,7 +360,7 @@
 		<dependency>
 			<groupId>sirocco.sirocco-sa</groupId>
 			<artifactId>sirocco-sa</artifactId>
-			<version>1.0.6</version>
+			<version>1.0.7</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.apache.avro</groupId>
@@ -533,6 +533,11 @@
 			</exclusions>	
 		</dependency>
 		
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-csv</artifactId>
+		    <version>1.5</version>
+		</dependency>		
 
 		<!-- compile dependencies -->
 		<dependency>
