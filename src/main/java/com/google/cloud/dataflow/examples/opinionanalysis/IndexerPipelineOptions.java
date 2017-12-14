@@ -106,7 +106,7 @@ public interface IndexerPipelineOptions extends DataflowPipelineOptions {
     String getBigQueryDataset();
     void setBigQueryDataset(String dataset);
     
-	@Description("Sink GCS output file")
+	@Description("Sink GCS output file.")
     String getOutputFile();
     void setOutputFile(String value);
     

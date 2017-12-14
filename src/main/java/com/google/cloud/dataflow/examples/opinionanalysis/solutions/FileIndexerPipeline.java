@@ -123,7 +123,8 @@ public class FileIndexerPipeline {
 		// Then, merge resulting webresources with webresourceRowsUnindexed and webresourceDeduped
 		indexes
 			.apply(ParDo.of(new CreateCSVLineFromIndexSummaryFn()))
-			.apply(TextIO.write().to(options.getOutputFile()));
+			.apply(TextIO.write()
+				.to(options.getOutputFile()));
 		
 		
 		return pipeline;
@@ -376,7 +377,7 @@ public class FileIndexerPipeline {
 					
 					csvPrinter.printRecord(linefields);
 					
-					String output = stringWriter.toString();
+					String output = stringWriter.toString().trim(); // need to trim, because printRecord will add the record separator, as will the TextIO.write method at the end of the pipeline
 					csvPrinter.flush(); // will also flush the stringWriter
 					
 					c.output(output);
