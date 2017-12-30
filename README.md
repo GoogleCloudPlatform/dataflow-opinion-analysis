@@ -170,27 +170,27 @@ If you would like to use this sample for deep textual analysis, download and ins
 
 * Go to the directory where the downloaded sirocco-sa-x.y.z.jar and sirocco-mo-x.y.z.jar files are located.
 
-* Install the Sirocco framework in your local Maven repository
+* Install the Sirocco framework in your local Maven repository. Replace x.y.z with downloaded version.
 
 ```
 mvn install:install-file \
   -DgroupId=sirocco.sirocco-sa \
   -DartifactId=sirocco-sa \
   -Dpackaging=jar \
-  -Dversion=1.0.1 \
-  -Dfile=sirocco-sa-1.0.1.jar \
+  -Dversion=[x.y.z] \
+  -Dfile=sirocco-sa-x.y.z.jar \
   -DgeneratePom=true
 ```
 
-* Install the Sirocco model file in your local Maven repository
+* Install the Sirocco model file in your local Maven repository. Replace x.y.z with downloaded version.
 
 ```
 mvn install:install-file \
   -DgroupId=sirocco.sirocco-mo \
   -DartifactId=sirocco-mo \
   -Dpackaging=jar \
-  -Dversion=1.0.0 \
-  -Dfile=sirocco-mo-1.0.0.jar \
+  -Dversion=x.y.z \
+  -Dfile=sirocco-mo-x.y.z.jar \
   -DgeneratePom=true
 ```
 
