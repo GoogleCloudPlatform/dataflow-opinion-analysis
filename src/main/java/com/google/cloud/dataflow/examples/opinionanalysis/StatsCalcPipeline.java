@@ -18,7 +18,7 @@ package com.google.cloud.dataflow.examples.opinionanalysis;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.JobId;
-import com.google.cloud.bigquery.QueryRequest;
+import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.QueryResponse;
 
 import org.apache.beam.sdk.Pipeline;
@@ -161,14 +161,25 @@ public class StatsCalcPipeline {
 
 		    for (int i=0; i < queryBatch.length; i++) {
 		    	String query = queryBatch[i];
-			    QueryRequest queryRequest = QueryRequest
+		    	QueryJobConfiguration queryRequest = QueryJobConfiguration
 				    	.newBuilder(query)
 				    	.setUseLegacySql(false)
 				    	.build();
-				QueryResponse response = bigquery.query(queryRequest);
-				 // Wait for previous query to finish
-				Boolean done = response.jobCompleted();
-				int retriesLeft = 10;
+		    	QueryResponse response = null;
+		    	Boolean done = false;
+		    	
+		    	try {
+		    		response = bigquery.query(queryRequest);
+		    	} catch (InterruptedException e) {
+					LOG.warn("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement:" + e.getMessage());
+					done = true;
+		    	}
+		    	
+				// Wait for previous query to finish
+		    	if (!done)
+		    		done = response.jobCompleted();
+				
+		    	int retriesLeft = 10;
 				while (!done) {
 					try {
 						Thread.sleep(1000);
@@ -191,7 +202,7 @@ public class StatsCalcPipeline {
 						done = true;
 					}
 				}
-				if (response.hasErrors()) {
+				if (response!=null && response.hasErrors()) {
 					LOG.warn("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement: BigQuery task completed with a response containing errors while executing query: "+ query);
 				} else {
 					LOG.info("StatsCalcPipeline.ExecuteSQLCommandBatch.processElement: BigQuery task completed with a response containing no [further] errors while executing query "+ query);
