@@ -22,12 +22,5 @@ import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineOptions
 
 public interface FileIndexerPipelineOptions extends IndexerPipelineOptions {
 	
-    @Description("Zero-based index of the Text column in input file")
-    Integer getTextColumnIdx();
-    void setTextColumnIdx(Integer textColumnIdx);
-	
-    @Description("Zero-based index of the Collection Item ID column - unique identifier - in input file")
-    Integer getCollectionItemIdIdx();
-    void setCollectionItemIdIdx(Integer collectionItemIdIdx);
     
 }

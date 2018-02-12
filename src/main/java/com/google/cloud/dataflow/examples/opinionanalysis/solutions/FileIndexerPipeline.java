@@ -48,6 +48,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.bigtable.v2.Mutation;
 import com.google.cloud.bigtable.config.BigtableOptions;
+import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipeline;
 import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineOptions;
 import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineUtils;
 import com.google.cloud.dataflow.examples.opinionanalysis.io.RecordFileSource;
@@ -105,7 +106,7 @@ public class FileIndexerPipeline {
 				.apply("Read entire CSV file", org.apache.beam.sdk.io.Read.from(new RecordFileSource<String>(
 					ValueProvider.StaticValueProvider.of(options.getInputFile()), 
 					StringUtf8Coder.of(), RecordFileSource.DEFAULT_RECORD_SEPARATOR))) //
-				.apply("Parse CSV file into InputContent objects", ParDo.of(new ParseCSVFile()));
+				.apply("Parse CSV file into InputContent objects", ParDo.of(new IndexerPipeline.ParseCSVFile()));
 		
 		// Define the accumulators of all filters
 		PCollection<InputContent> contentToIndex = readContent;
@@ -131,113 +132,6 @@ public class FileIndexerPipeline {
 	}
 
 	
-	static class ParseCSVFile extends DoFn<String,InputContent> {
-
-		@ProcessElement
-		public void processElement(ProcessContext c) {
-
-			String rawInput = null;
-			InputContent iContent = null;
-			
-			try {
-				rawInput = c.element();
-				if (rawInput == null)
-					throw new Exception("ParseCSVFile: null raw content");
-				
-				
-				FileIndexerPipelineOptions options = c.getPipelineOptions().as(FileIndexerPipelineOptions.class);
-				Integer textColumnIdx = options.getTextColumnIdx();
-				Integer collectionItemIdIdx = options.getCollectionItemIdIdx();
-				
-				InputStreamReader isr = new InputStreamReader(IOUtils.toInputStream(rawInput,StandardCharsets.UTF_8.name()));
-				
-				Iterable<CSVRecord> records = CSVFormat.DEFAULT
-					.withFirstRecordAsHeader()
-					.parse(isr);
-				
-				for (CSVRecord record : records) {
-					
-					String text = record.get(textColumnIdx);
-					String documentCollectionId = IndexerPipelineUtils.DOC_COL_ID_CSV_FILE;
-					String collectionItemId = record.get(collectionItemIdIdx);
-					
-					InputContent ic = new InputContent(
-						null /*url*/, null /*pubTime*/, null /*title*/, null /*author*/, null /*language*/, 
-						text, documentCollectionId, collectionItemId, 0 /*skipIndexing*/);					
-					
-					c.output(ic);
-				}
-				
-
-			} catch (Exception e) {
-				LOG.warn(e.getMessage());
-			}
-		}
-		
-
-	}
-	
-	/**
-	 * 
-	 * Use in the future, when we are able to parallelize import at the record file source
-	 * @author sezok
-	 *
-	 */
-	static class ParseCSVLine extends DoFn<String,InputContent> {
-
-		/*
-		@Setup
-		public void setup(){
-		}
-		
-		@Teardown
-		public void teardown(){
-		}
-		*/
-		
-		@ProcessElement
-		public void processElement(ProcessContext c) {
-
-			String rawInput = null;
-			InputContent iContent = null;
-			
-			try {
-				rawInput = c.element();
-				if (rawInput == null)
-					throw new Exception("ParseCSVLine: null raw content");
-				rawInput = rawInput.trim();
-				if (rawInput.isEmpty())
-					throw new Exception("ParseCSVLine: empty raw content or whitespace chars only");
-				
-				FileIndexerPipelineOptions options = c.getPipelineOptions().as(FileIndexerPipelineOptions.class);
-				Integer textColumnIdx = options.getTextColumnIdx();
-				Integer collectionItemIdIdx = options.getCollectionItemIdIdx();
-				
-				InputStreamReader isr = new InputStreamReader(IOUtils.toInputStream(rawInput,StandardCharsets.UTF_8.name()));
-				
-				Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(isr);
-				
-				for (CSVRecord record : records) { // should only be one record, but handle multi-record case as well
-					
-					String text = record.get(textColumnIdx);
-					String documentCollectionId = IndexerPipelineUtils.DOC_COL_ID_CSV_FILE;
-					String collectionItemId = record.get(collectionItemIdIdx);
-					
-					InputContent ic = new InputContent(
-						null /*url*/, null /*pubTime*/, null /*title*/, null /*author*/, null /*language*/, 
-						text, documentCollectionId, collectionItemId, 0 /*skipIndexing*/);					
-					
-					c.output(ic);
-				}
-				
-
-			} catch (Exception e) {
-				LOG.warn(e.getMessage());
-			}
-		}
-		
-
-	}
 	
 	
 	/**

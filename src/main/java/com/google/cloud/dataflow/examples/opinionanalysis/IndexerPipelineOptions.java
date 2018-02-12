@@ -35,11 +35,6 @@ public interface IndexerPipelineOptions extends DataflowPipelineOptions {
 	Boolean isSourceJDBC();
 	void setSourceJDBC(Boolean value);
 	
-	@Description("Whether to connect to a GCS source in RecordFile format")
-	@Default.Boolean(false)
-	Boolean isSourceRecordFile();
-	void setSourceRecordFile(Boolean value);
-	
 	@Description("Whether to connect to BigQuery dataset with Reddit posts and comments")
 	@Default.Boolean(false)
 	Boolean isSourceRedditBQ();
@@ -50,10 +45,37 @@ public interface IndexerPipelineOptions extends DataflowPipelineOptions {
 	Boolean isSourceGDELTbucket();
 	void setSourceGDELTbucket(Boolean value);
 		
+	@Description("Whether to connect to a GCS source in RecordFile format")
+	@Default.Boolean(false)
+	Boolean isSourceRecordFile();
+	void setSourceRecordFile(Boolean value);
+	
 	@Description("Source files. Use with RecordFile and GDELTbucket sources. Names can be a pattern like *.gz or *.txt")
     String getInputFile();
     void setInputFile(String value);
 
+	@Description("Source RecordFile: Record delimiter characters dividing records in the file. If multiple characters are used, separate them by a comma, e.g. 13,10 stands for <CR><LF>. Use delimiter 30 (=<RS>) to prevent regular new line delimiters splitting text files.")
+    String getRecordDelimiters();
+    void setRecordDelimiters(String value);
+
+	@Description("Source RecordFile: Should records be processed as CSV")
+	@Default.Boolean(false)
+    Boolean getReadAsCSV();
+    void setReadAsCSV(Boolean value);
+    
+	@Description("Source RecordFile: Should records be processed as bag of properties")
+    Boolean getReadAsPropertyBag();
+    void setReadAsPropertyBag(Boolean value);
+
+    @Description("CSV inputs: Zero-based index of the Text column in input file")
+    Integer getTextColumnIdx();
+    void setTextColumnIdx(Integer textColumnIdx);
+	
+    @Description("CSV inputs: Zero-based index of the Collection Item ID column - unique identifier - in input file")
+    Integer getCollectionItemIdIdx();
+    void setCollectionItemIdIdx(Integer collectionItemIdIdx);
+    
+    
     @Description("Source Pub/Sub topic")
     String getPubsubTopic();
     void setPubsubTopic(String topic);

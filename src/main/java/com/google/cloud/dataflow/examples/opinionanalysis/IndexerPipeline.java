@@ -14,6 +14,8 @@
  * limitations under the License.
  *******************************************************************************/
 package com.google.cloud.dataflow.examples.opinionanalysis;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,6 +30,7 @@ import org.apache.beam.sdk.coders.KvCoder;
 import org.apache.beam.sdk.coders.StringUtf8Coder;
 import org.apache.beam.sdk.coders.VarLongCoder;
 import org.apache.beam.sdk.io.TextIO;
+import org.apache.beam.sdk.io.TextIO.Read;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.Write.CreateDisposition;
 import org.apache.beam.sdk.io.gcp.bigquery.BigQueryIO.Write.WriteDisposition;
@@ -43,6 +46,8 @@ import org.apache.beam.sdk.transforms.Flatten;
 import org.apache.beam.sdk.transforms.GroupByKey;
 import org.apache.beam.sdk.transforms.ParDo;
 import org.apache.beam.sdk.transforms.View;
+import org.apache.beam.sdk.transforms.DoFn.ProcessContext;
+import org.apache.beam.sdk.transforms.DoFn.ProcessElement;
 import org.apache.beam.sdk.transforms.join.CoGbkResult;
 import org.apache.beam.sdk.transforms.join.CoGroupByKey;
 import org.apache.beam.sdk.transforms.join.KeyedPCollectionTuple;
@@ -53,6 +58,9 @@ import org.apache.beam.sdk.values.PCollectionTuple;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.io.IOUtils;
 import org.joda.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +74,7 @@ import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineUtils.E
 import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineUtils.ExtractPostDataFn;
 import com.google.cloud.dataflow.examples.opinionanalysis.io.RecordFileSource;
 import com.google.cloud.dataflow.examples.opinionanalysis.model.InputContent;
+import com.google.cloud.dataflow.examples.opinionanalysis.solutions.FileIndexerPipelineOptions;
 import com.google.cloud.dataflow.examples.opinionanalysis.transforms.Reshuffle;
 import com.google.cloud.dataflow.examples.opinionanalysis.util.PartitionedTableRef;
 import com.google.cloud.dataflow.examples.opinionanalysis.util.PipelineTags;
@@ -142,11 +151,24 @@ public class IndexerPipeline {
 		} else {
 			
 			// Read from GCS files
+			/*
 			readContent = pipeline
 				.apply("Read from GCS files", org.apache.beam.sdk.io.Read.from(new RecordFileSource<String>(
 					ValueProvider.StaticValueProvider.of(options.getInputFile()), 
 					StringUtf8Coder.of(), RecordFileSource.DEFAULT_RECORD_SEPARATOR)))
 				.apply(ParDo.of(new ParseRawInput())); 
+			*/
+			Read r = TextIO.read().from(options.getInputFile());
+			if (options.getRecordDelimiters()!=null && !options.getRecordDelimiters().isEmpty())  
+				r = r.withDelimiter(IndexerPipelineUtils.extractRecordDelimiters(options.getRecordDelimiters()));
+				
+			DoFn<String,InputContent> tr = (options.getReadAsCSV())? 
+				new ParseCSVFile() : new ParseRawInput();
+					
+			readContent = pipeline
+				.apply("Read from GCS files", r)
+				.apply("Parse input into InputContent objects",ParDo.of(tr)); 
+			
 		}
 		
 		// PHASE: Filter already processed URLs
@@ -1062,6 +1084,113 @@ public class IndexerPipeline {
 				c.output(iContent);
 		}
 		
+
+	}
+
+	public static class ParseCSVFile extends DoFn<String,InputContent> {
+
+		@ProcessElement
+		public void processElement(ProcessContext c) {
+
+			String rawInput = null;
+			InputContent iContent = null;
+			
+			try {
+				rawInput = c.element();
+				if (rawInput == null)
+					throw new Exception("ParseCSVFile: null raw content");
+				
+				
+				FileIndexerPipelineOptions options = c.getPipelineOptions().as(FileIndexerPipelineOptions.class);
+				Integer textColumnIdx = options.getTextColumnIdx();
+				Integer collectionItemIdIdx = options.getCollectionItemIdIdx();
+				
+				InputStreamReader isr = new InputStreamReader(IOUtils.toInputStream(rawInput,StandardCharsets.UTF_8.name()));
+				
+				Iterable<CSVRecord> records = CSVFormat.DEFAULT
+					.withFirstRecordAsHeader()
+					.parse(isr);
+				
+				for (CSVRecord record : records) {
+					
+					String text = record.get(textColumnIdx);
+					String documentCollectionId = IndexerPipelineUtils.DOC_COL_ID_CSV_FILE;
+					String collectionItemId = (collectionItemIdIdx!=null)? record.get(collectionItemIdIdx): null;
+					
+					InputContent ic = new InputContent(
+						null /*url*/, null /*pubTime*/, null /*title*/, null /*author*/, null /*language*/, 
+						text, documentCollectionId, collectionItemId, 0 /*skipIndexing*/);					
+					
+					c.output(ic);
+				}
+				
+
+			} catch (Exception e) {
+				LOG.warn(e.getMessage());
+			}
+		}
+		
+
+	}
+	
+	/**
+	 * 
+	 * Use in the future, when we are able to parallelize import at the record file source
+	 * @author sezok
+	 *
+	 */
+	static class ParseCSVLine extends DoFn<String,InputContent> {
+
+		/*
+		@Setup
+		public void setup(){
+		}
+		
+		@Teardown
+		public void teardown(){
+		}
+		*/
+		
+		@ProcessElement
+		public void processElement(ProcessContext c) {
+
+			String rawInput = null;
+			InputContent iContent = null;
+			
+			try {
+				rawInput = c.element();
+				if (rawInput == null)
+					throw new Exception("ParseCSVLine: null raw content");
+				rawInput = rawInput.trim();
+				if (rawInput.isEmpty())
+					throw new Exception("ParseCSVLine: empty raw content or whitespace chars only");
+				
+				FileIndexerPipelineOptions options = c.getPipelineOptions().as(FileIndexerPipelineOptions.class);
+				Integer textColumnIdx = options.getTextColumnIdx();
+				Integer collectionItemIdIdx = options.getCollectionItemIdIdx();
+				
+				InputStreamReader isr = new InputStreamReader(IOUtils.toInputStream(rawInput,StandardCharsets.UTF_8.name()));
+				
+				Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(isr);
+				
+				for (CSVRecord record : records) { // should only be one record, but handle multi-record case as well
+					
+					String text = record.get(textColumnIdx);
+					String documentCollectionId = IndexerPipelineUtils.DOC_COL_ID_CSV_FILE;
+					String collectionItemId = record.get(collectionItemIdIdx);
+					
+					InputContent ic = new InputContent(
+						null /*url*/, null /*pubTime*/, null /*title*/, null /*author*/, null /*language*/, 
+						text, documentCollectionId, collectionItemId, 0 /*skipIndexing*/);					
+					
+					c.output(ic);
+				}
+				
+
+			} catch (Exception e) {
+				LOG.warn(e.getMessage());
+			}
+		}
 
 	}
 	

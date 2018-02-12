@@ -36,6 +36,7 @@ import org.apache.beam.sdk.values.KV;
 import org.apache.beam.sdk.values.PCollection;
 import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
+import org.apache.commons.lang3.ArrayUtils;
 
 import sirocco.util.IdConverterUtils;
 
@@ -341,9 +342,23 @@ public class IndexerPipelineUtils {
 		}
 
 		if (options.isSourceRecordFile()) {
-			if (options.getInputFile().isEmpty())
+			if (options.getInputFile()==null || options.getInputFile().isEmpty())
 				throw new IllegalArgumentException(
 						"Input file path pattern needs to be specified when GCS is being used as a source type.");
+			try {
+				if (!(options.getRecordDelimiters()==null || options.getRecordDelimiters().isEmpty()))
+					extractRecordDelimiters(options.getRecordDelimiters());
+				
+			} catch(Exception e) {
+				throw new IllegalArgumentException(
+						"Invalid value of the RecordDelimiters parameter: " + e.getMessage());
+			}
+			if (options.getReadAsCSV()!=null && options.getReadAsPropertyBag() != null && options.getReadAsCSV() && options.getReadAsPropertyBag()) {
+				throw new IllegalArgumentException(
+						"Only one of readAsCSV and readAsPropertBag options can be set.");
+			}
+			if (options.getReadAsCSV()==null || ! options.getReadAsCSV())
+				options.setReadAsPropertyBag(true);
 		}
 
 		if (options.isSourceRedditBQ()) {
@@ -484,6 +499,16 @@ public class IndexerPipelineUtils {
 		// link_id in comments is already in the format t3_<postId>
 	}
 	
+	public static byte[] extractRecordDelimiters(String paramValue) {
+		String[] delimiters = paramValue.split(",");
+		ArrayList<Byte> resList = new ArrayList<Byte>();
+		for (String d: delimiters)
+			resList.add(Byte.parseByte(d));
+		Byte[] resArray = new Byte[resList.size()];
+		resList.toArray(resArray);
+		byte[] result = ArrayUtils.toPrimitive(resArray);
+		return result;
+	}
 	/**
 	 * Extracts the post id from the post record.
 	 */
@@ -541,35 +566,4 @@ public class IndexerPipelineUtils {
 	}
 	*/
 	
-	/**
-	 * Do some runner setup: check that the DirectPipelineRunner is not used in
-	 * conjunction with streaming, and if streaming is specified, use the
-	 * DataflowPipelineRunner. Return the streaming flag value.
-	 */
-	/*
-	private static void setupRunner(IndexerPipelineOptions options) {
-		if (options.isStreaming()) {
-			if (options.getRunner() == DirectRunner.class) {
-				throw new IllegalArgumentException(
-						"Processing of unbounded input sources is not supported with the DirectRunner.");
-			}
-			// In order to cancel the pipelines automatically,
-			// {@literal DataflowPipelineRunner} is forced to be used.
-			options.setRunner(DataflowRunner.class);
-		}
-	}
-	*/
-	/*
-	public static <T> T executeNullIfNotFound(AbstractGoogleClientRequest<T> request) throws IOException {
-		try {
-			return request.execute();
-		} catch (GoogleJsonResponseException e) {
-			if (e.getStatusCode() == HttpServletResponse.SC_NOT_FOUND) {
-				return null;
-			} else {
-				throw e;
-			}
-		}
-	}
-	*/
 }
