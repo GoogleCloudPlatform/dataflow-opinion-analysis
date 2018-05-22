@@ -160,7 +160,7 @@ Table schema definitions are located in the *Schema.json files in the `bigquery`
 ### Deploy the Dataflow pipelines
 
 
-#### [Optional] Download and install the Sirocco sentiment analysis packages
+#### Download and install the Sirocco sentiment analysis packages
 
 If you would like to use this sample for deep textual analysis, download and install [Sirocco](https://github.com/datancoffee/sirocco), a framework maintained by [@datancoffee](https://medium.com/@datancoffee).
 
@@ -177,7 +177,7 @@ mvn install:install-file \
   -DgroupId=sirocco.sirocco-sa \
   -DartifactId=sirocco-sa \
   -Dpackaging=jar \
-  -Dversion=[x.y.z] \
+  -Dversion=x.y.z \
   -Dfile=sirocco-sa-x.y.z.jar \
   -DgeneratePom=true
 ```
