@@ -195,7 +195,7 @@ mvn install:install-file \
 ```
 
 #### Build and Deploy your Controller pipeline to Cloud Dataflow
-
+Note (May 22,2018): We are in the process of updating the Controller pipeline. Skip this step and instead launch Indexing jobs directly as described in [Release Notes for version 0.6.4](https://github.com/GoogleCloudPlatform/dataflow-opinion-analysis/releases/tag/v0.6.4) 
 
 * Go to the `dataflow-opinion-analysis/scripts` directory and make a copy of the `run_controljob_template.sh` file
 
@@ -215,6 +215,7 @@ scripts/run_controljob.sh &
 ```
 
 #### Run a verification job
+Note (May 22,2018): We are in the process of updating the Controller pipeline. Skip this step and instead launch Indexing jobs directly as described in [Release Notes for version 0.6.4](https://github.com/GoogleCloudPlatform/dataflow-opinion-analysis/releases/tag/v0.6.4) 
 
 You can use the included news articles (from Google's blogs) in the `src/test/resources/input` directory to run a test pipeline.
 
