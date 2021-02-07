@@ -1,0 +1,20 @@
+[
+    {
+        "mode": "NULLABLE",
+        "name": "Ngram",
+        "type": "STRING",
+        "description": "Ngram in token/POS format."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntOccurences",
+        "type": "INTEGER",
+        "description": "Number of occurences of this ngram (multiple per document are possible)."
+    },
+    {
+        "mode": "NULLABLE",
+        "name": "cntDocuments",
+        "type": "INTEGER",
+        "description": "Number of documents this ngram appeared in."
+    }
+]

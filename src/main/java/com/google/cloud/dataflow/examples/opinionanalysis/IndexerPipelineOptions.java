@@ -40,6 +40,11 @@ public interface IndexerPipelineOptions extends DataflowPipelineOptions {
 	Boolean isSourceRedditBQ();
 	void setSourceRedditBQ(Boolean value);
 
+	@Description("Whether to read files from Reddit archive file")
+	@Default.Boolean(false)
+	Boolean isSourceRedditArchive();
+	void setSourceRedditArchive(Boolean value);
+
 	@Description("Whether to read files from GDELT bucket")
 	@Default.Boolean(false)
 	Boolean isSourceGDELTbucket();

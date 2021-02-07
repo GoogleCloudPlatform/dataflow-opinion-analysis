@@ -61,6 +61,8 @@ public class IndexerPipelineUtils {
 	public static final String DOCUMENT_TABLE = "document";
 	public static final String SENTIMENT_TABLE = "sentiment";
 	public static final String STATTOPIC_TABLE = "stattopic";
+	public static final String STATNGRAM_TABLE = "statngram";
+	
 
 	// IDs of known document collections
 	public static final String DOC_COL_ID_KGA = "01";
@@ -534,36 +536,6 @@ public class IndexerPipelineUtils {
 	}
 
 	
-	/**
-	 * Sets up the Google Cloud Pub/Sub client and tests existence of the topic.
-	 *
-	 * @throws IOException
-	 *             if there is a problem setting up the Pub/Sub topic
-	 */
-	/*
-	private static void setupPubsubTopic(IndexerPipelineOptions options) throws IOException {
-		
-		Pubsub pubsubClient = Transport.newPubsubClient(options).build();
-		//Pubsub pubsubClient = PubsubUtils.getClient();
-		String topic = options.getPubsubTopic();
-		if (executeNullIfNotFound(pubsubClient.projects().topics().get(topic)) == null) {
-			// pubsubClient.projects().topics().create(topic, new
-			// Topic().setName(topic)).execute();
-		}
 
-	}
-	*/
-	/**
-	 * Sets up the BigQuery client.
-	 *
-	 * @throws IOException
-	 *             if there is a problem setting up BigQuery client
-	 */
-	/*
-	private static void setupBigQuery(IndexerPipelineOptions options) throws IOException {
-		Bigquery bigQueryClient = Transport.newBigQueryClient(options.as(BigQueryOptions.class)).build();
-		// return bigQueryClient;
-	}
-	*/
 	
 }

@@ -1027,7 +1027,7 @@ public class IndexerPipeline {
 				Indexer.index(contentindex); // Call to the NLP package
 				
 				if (!contentindex.IsIndexingSuccessful)
-					throw new Exception(contentindex.IndexingErrors + ". Text: "+ic.text);
+					throw new Exception("Not able to index. Errors: " + contentindex.IndexingErrors + ". Text: "+ic.text);
 				
 				summary = contentindex.getContentIndexSummary();
 				

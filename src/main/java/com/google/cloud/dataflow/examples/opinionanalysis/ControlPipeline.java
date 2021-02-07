@@ -113,11 +113,11 @@ public class ControlPipeline {
 			TopicName topicName = TopicName.create(projectId, topicId);
 			
 			Subscription subscription;
-		    try {
-		        subscription = subscriptionAdminClient.getSubscription(subscriptionName);
-		    } catch (Exception e) {
-		    	subscription = null;
-		    }
+			try {
+				subscription = subscriptionAdminClient.getSubscription(subscriptionName);
+			} catch (Exception e) {
+				subscription = null;
+			}
 		    
 		    if (subscription == null) {
 		    	try {
