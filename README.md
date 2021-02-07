@@ -160,7 +160,7 @@ Table schema definitions are located in the *Schema.json files in the `bigquery`
 ### Deploy the Dataflow pipelines
 
 
-#### [Optional] Download and install the Sirocco sentiment analysis packages
+#### Download and install the Sirocco sentiment analysis packages
 
 If you would like to use this sample for deep textual analysis, download and install [Sirocco](https://github.com/datancoffee/sirocco), a framework maintained by [@datancoffee](https://medium.com/@datancoffee).
 
@@ -177,7 +177,7 @@ mvn install:install-file \
   -DgroupId=sirocco.sirocco-sa \
   -DartifactId=sirocco-sa \
   -Dpackaging=jar \
-  -Dversion=[x.y.z] \
+  -Dversion=x.y.z \
   -Dfile=sirocco-sa-x.y.z.jar \
   -DgeneratePom=true
 ```
@@ -195,7 +195,7 @@ mvn install:install-file \
 ```
 
 #### Build and Deploy your Controller pipeline to Cloud Dataflow
-
+Note (May 22,2018): We are in the process of updating the Controller pipeline. Skip this step and instead launch Indexing jobs directly as described in [Release Notes for version 0.6.4](https://github.com/GoogleCloudPlatform/dataflow-opinion-analysis/releases/tag/v0.6.4) 
 
 * Go to the `dataflow-opinion-analysis/scripts` directory and make a copy of the `run_controljob_template.sh` file
 
@@ -215,6 +215,7 @@ scripts/run_controljob.sh &
 ```
 
 #### Run a verification job
+Note (May 22,2018): We are in the process of updating the Controller pipeline. Skip this step and instead launch Indexing jobs directly as described in [Release Notes for version 0.6.4](https://github.com/GoogleCloudPlatform/dataflow-opinion-analysis/releases/tag/v0.6.4) 
 
 You can use the included news articles (from Google's blogs) in the `src/test/resources/input` directory to run a test pipeline.
 
@@ -235,6 +236,7 @@ command=start_gcs_import
 * Enter the following query to list new documents that were indexed by the Dataflow job. The sample query is using the Standard SQL dialect of BigQuery.
 
 ```
+#standardSQL
 SELECT * FROM opinions.sentiment 
 ORDER BY DocumentTime DESC
 LIMIT 100
