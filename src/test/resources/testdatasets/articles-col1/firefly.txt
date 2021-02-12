@@ -1,0 +1,15 @@
+Title=Indie developer recreates the Serenity spacecraft from ‘Firefly’ in VR
+Author=JEFF GRUBB
+PubTime=2016-10-15 20:15:00
+Url=http://venturebeat.com/2016/10/15/indie-developer-re-creates-the-serenity-spacecraft-from-firefly-in-vr/
+Language=EN
+
+Burn the land. Boil the sea. I don’t need any of that junk in virtual reality.
+
+Fans of the cult-classic sci-fi television program Firefly can now explore the show’s Serenity vessel in virtual reality thanks to the work of indie developer Kaveh Tabar. He has spent the last several years piecing together the spacecraft’s iconic mess hall, hallway, and cockpit. All that’s missing are some toy dinosaurs on the dashboard … and the engine room, crew quarters, cargo hold, and infirmary. Tabar is building this in Unity, which means that once he finishes it and decides to distribute it, you can explore the outlaw Malcolm Reynolds’ boat for yourself in the HTC Vive or Oculus Rift.
+
+Tabar recently posted an update on his blog about the progress he has made, and he even tweeted out a video of the cockpit:
+
+“As for the other areas of the ship, the mess and hallway are pretty much done,” he wrote. “Next, I’ll be working on updating the cargo hold and infirmary area and then adding the engine room and crew quarters.”
+
+He’s also working on including interactivity for the Vive controllers so that Serenity doesn’t come across as a sterile museum.

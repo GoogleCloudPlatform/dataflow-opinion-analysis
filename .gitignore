@@ -9,6 +9,7 @@ scheduler/lib/
 
 # Ignore local versions of scripts
 scripts/*_local.sh
+bigquery/*_local.sh
 
 # Ignore Eclipse files.
 .classpath
@@ -18,6 +19,12 @@ scripts/*_local.sh
 .fbExcludeFilterFile
 .apt_generated/
 .settings/
+
+# Ignore IntelliJ files.
+.idea/
+.run/
+examples-opinionanalysis.iml
+examples-opinionanalysis (1).iml
 
 # The build process generates the dependency-reduced POM, but it shouldn't be
 # committed.

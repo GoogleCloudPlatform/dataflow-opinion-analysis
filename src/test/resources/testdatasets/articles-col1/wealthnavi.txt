@@ -1,0 +1,13 @@
+Title=Japanese asset management startup WealthNavi raises $15M
+Author=MASARU IKEDA
+PubTime=2016-10-16 12:15:00
+Url=http://venturebeat.com/2016/10/16/japanese-asset-management-startup-wealthnavi-raises-15m/
+Language=EN
+
+Tokyo-based WealthNavi, the company offering a technology-based asset management service under the same name, announced on Wednesday that it has fundraised 1.5 billion yen (about $15 million) in a series B round. Participating companies in this round were SBI Holdings, SBI Investment, Mizuho Capital, SMBC Venture Capital, DBJ Capital, and Infinity Venture Partners.
+
+Additionally, the startup has partnered with SBI securities and Sumishin SBI Net Bank, both of which are subsidiaries of SBI Holdings, to offer the robo-advisory service to SBI’s 2.6 million online banking customers plus 3.6 million stock trading customers. This funding means that the company has fundraised a total of 2.1 billion yen (about $21 million) since the company’s launch back in April of 2015.
+
+WealthNavi offers a cloud-based robo-advisory service that helps middle-income people better locate diversified investments internationally. The service was officially launched in July this year.
+
+It is said that SBI Group has been massively helping regional banks and credit unions nationwide in Japan adopt FinTech services since they are typically small and have few resources to catch up with the new trend unlike typical megabanks. Through the partnership with the financial conglomerate, WealthNavi also expects to gain an access to a huge base of potential customers that these regional institutions posses.
