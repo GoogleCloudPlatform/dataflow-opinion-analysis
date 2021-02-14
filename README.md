@@ -70,9 +70,11 @@ Create and setup a Cloud Storage bucket and Cloud Pub/Sub topics
 
 * Create folders in this bucket `staging`, `input`, `output`, `temp`
 
-* (Optional) [Create](https://console.cloud.google.com/cloudpubsub/topicList) the following Pub/Sub topic: `documents`
+* (Optional) [Create](https://console.cloud.google.com/cloudpubsub/topicList) the following Pub/Sub topic: `documents`. This topic can be used together with a streaming Dataflow pipeline. You can send textual documents to that topic, and the Dataflow Indexing pipeline will process these documents as they arrive.
 
-Create or verify a configuration for your project
+(Optional) Create or verify a configuration for your project
+
+By now you have already created a configuration, e.g. when you initiated the Google Cloud SDK. Now is another chance to change your mind and create a new configuration.
 
 * Authenticate with the Cloud Platform. Run the following command to get [Application Default Credentials](https://developers.google.com/identity/protocols/application-default-credentials).
 
@@ -82,15 +84,18 @@ Create or verify a configuration for your project
 
   `gcloud init`
 
-* Verify your configurations
+Verify your configuration
+
+* Verify that the active configuration is the one you want to use
 
   `gcloud config configurations list`
-
 
 Important: This tutorial uses several billable components of Google Cloud Platform. New Cloud Platform users may be eligible for a [free trial](http://cloud.google.com/free-trial).
 
 
 ### Clone the sample code
+
+Go to the directory where you typically store your git repos.
 
 To clone the GitHub repository to your computer, run the following command:
 
@@ -108,6 +113,10 @@ cd dataflow-opinion-analysis
 
 Do this step before creating the BigQuery dataset and before running your demo Dataflow jobs every time you open a new shell. 
 
+* Check what configurations are currently available on your machine
+
+ `gcloud config configurations list`
+ 
 * Activate the gcloud configuration for the project where your BigQuery dataset and your Dataflow jobs are or should be located
 
 ```
@@ -122,15 +131,22 @@ cp set_env_vars_template.sh set_env_vars_local.sh
 chmod +x *.sh
 ```
 
-* [One Time Task] Edit the `set_env_vars_local.sh` file in your favorite text editor, e.g. `nano`. Specifically, set the values of the variables used for parametarizing your Dataflow pipeline. Set the values of the DATASET_ID, GCS_BUCKET and other variables at the beginning of the shell script. Note that the UNSUPPORTED_SDK_OVERRIDE_TOKEN variable should only be set once you have a real token to replace it with (see below for more info).
+* [One Time Task] Edit the `set_env_vars_local.sh` file in your favorite text editor, e.g. `nano`. Specifically, set the values of the variables used for parametarizing your Dataflow pipeline. Set the value of DATASET_ID to the name of a BigQuery dataset that you want to keep your analysis results in (this dataset does not have to exist yet, we will create it in later steps). A good DATASET_ID is "opinions". Set GCS_BUCKET to the name of the GCS bucket that you created previously. Note that the UNSUPPORTED_SDK_OVERRIDE_TOKEN variable should only be set once you have a real token to replace it with (see below for more info).
 
 * Set environment variables for the rest of your shell session
 
 Don't miss the dot at the beginning of this command!
 
 ```
-. scripts/set_env_vars_local.sh
+. ./set_env_vars_local.sh
 ```
+
+* Return to the root directory of the repo
+
+```
+cd ..
+```
+
 
 ### Create the BigQuery dataset
 
@@ -158,13 +174,13 @@ Table schema definitions are located in the *Schema.json files in the `bigquery`
 
 Download and install [Sirocco](https://github.com/datancoffee/sirocco), a framework maintained by [@datancoffee](https://twitter.com/@datancoffee).
 
-* Download the latest [Sirocco Java framework](https://github.com/datancoffee/sirocco/releases/) jar file.
+* Download the latest [Sirocco Java framework](https://github.com/datancoffee/sirocco/releases/) **jar** file.
 
-* Download the latest [Sirocco model](https://gist.github.com/datancoffee/sirocco-mo/releases/) file.
+* Download the latest [Sirocco model](https://github.com/datancoffee/sirocco-mo/releases/) **jar** file.
 
 * Go to the directory where the downloaded sirocco-sa-x.y.z.jar and sirocco-mo-x.y.z.jar files are located.
 
-* Install the Sirocco framework in your local Maven repository. Replace x.y.z with downloaded version.
+* Install the Sirocco framework in your local Maven repository. Replace x.y.z with downloaded versions.
 
 ```
 mvn install:install-file \
@@ -197,10 +213,20 @@ You can use the included news articles (from Google's blogs) and movie reviews i
 
 We will run a demo job that processes movie reviews in CSV format. 
 
-* Go back to the `dataflow-opinion-analysis` directory and run a command to deploy the control Dataflow pipeline to Cloud Dataflow. 
+* Go back to the `dataflow-opinion-analysis` directory 
+
+`cd dataflow-opinion-analysis`
+
+* Build the executable jar. This command should create a bundled jar in the target directory, e.g. ./target/examples-opinionanalysis-bundled-x.y.z.jar
 
 ```
-scripts/run_indexer_gcs_csv_to_bigquery.sh FULLINDEX SHALLOW SHORTTEXT 1 2 gs://$GCS_BUCKET/input/kaggle-rotten-tomato/*.csv
+mvn clean package
+```
+
+* Run a command to deploy the control Dataflow pipeline to Cloud Dataflow. 
+
+```
+scripts/run_indexer_gcs_csv_to_bigquery.sh FULLINDEX SHALLOW SHORTTEXT 1 2 "gs://$GCS_BUCKET/input/kaggle-rotten-tomato/*.csv"
 ```
 
 * (First Time Only) The first time you run the job, you will get an error from Dataflow 
@@ -235,7 +261,7 @@ LIMIT 1000;
 
 ### Issues Under Investigation
 
-* Writing to BigQuery does not truncate existing content, even if --writeTruncate=true is specified
+* The IndexerPipeline Dataflow job does not truncate existing content in BigQuery tables, even if --writeTruncate=true is specified
 This is because the BigQuery tables are defined as partitioned tables. The workaround for truncating the content between job runs is to run the following script
 
 ```
@@ -243,6 +269,32 @@ DELETE FROM opinions.document WHERE 1=1;
 DELETE FROM opinions.sentiment WHERE 1=1;
 DELETE FROM opinions.webresource WHERE 1=1;
 ``` 
+
+* Building the project on Apple M1 chip hardware results in an error
+`Caused by: org.xerial.snappy.SnappyError: [FAILED_TO_LOAD_NATIVE_LIBRARY] no native library is found for os.name=Mac and os.arch=aarch64`
+
+This is because we are using an older version of the Beam SDK, which in turn uses an older version of snappy-java. Snappy-java version [1.1.8.2](https://github.com/xerial/snappy-java/releases/tag/1.1.8.2) is supposed to work on Apple M1 chips, and we will fix the problem when we upgrade to newer versions of Beam. For the time being, build the project and submit jobs on pre-M1 Mac hardware.
+
+* The IndexerPipeline Dataflow job is marked as 'Failed' although data gets successfuilly imported into BigQuery. This is because of the temporary BigQuery import files created in the GCS temp folder that are sometimes not cleaned up. The IndexerPipeline stages that write to BigQuery are marked as 'Failed' as well. Since data is successfully imported into BigQuery, this issue can be ignored for the time being, until we upgraded our Beam dependecies.
+
+If you are seeing pipeline failures, see if you are getting the following errors in the pipeline logs
+```
+java.lang.RuntimeException: org.apache.beam.sdk.util.UserCodeException: java.io.IOException: Error executing batch GCS request
+...
+Caused by: java.util.concurrent.ExecutionException: com.google.api.client.http.HttpResponseException: 404 Not Found
+
+<!DOCTYPE html>
+<html lang=en>
+  <meta charset=utf-8>
+  <meta name=viewport content="initial-scale=1, minimum-scale=1, width=device-width">
+  <title>Error 404 (Not Found)!!1</title>
+  <style>
+    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/logos/errorpage/error_logo-150x54.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/logos/errorpage/error_logo-150x54-2x.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/logos/errorpage/error_logo-150x54-2x.png) 0}}@media only screen and (-webkit-min-device-pixel-ratio:2){#logo{background:url(//www.google.com/images/logos/errorpage/error_logo-150x54-2x.png) no-repeat;-webkit-background-size:100% 100%}}#logo{display:inline-block;height:54px;width:150px}
+  </style>
+  <a href=//www.google.com/><span id=logo aria-label=Google></span></a>
+  <p><b>404.</b> <ins>That’s an error.</ins>
+  <p>  <ins>That’s all we know.</ins> 
+```
 
 ### Clean up
 
