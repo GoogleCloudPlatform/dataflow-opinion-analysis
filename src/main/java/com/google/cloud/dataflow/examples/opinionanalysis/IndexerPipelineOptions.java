@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.google.cloud.dataflow.examples.opinionanalysis;
 
+import opennlp.tools.cmdline.ArgumentParser;
 import org.apache.beam.runners.dataflow.options.DataflowPipelineOptions;
 import org.apache.beam.sdk.options.Default;
 import org.apache.beam.sdk.options.Description;
@@ -141,11 +142,21 @@ public interface IndexerPipelineOptions extends DataflowPipelineOptions {
     Boolean getDedupeText();
     void setDedupeText(Boolean dedupeText);
 
-    @Description("Text indexing option: Index as Short text or as an Article. Default: false")
-    @Default.Boolean(false)
-    Boolean getIndexAsShorttext();
-    void setIndexAsShorttext(Boolean indexAsShorttext);
-    
+    @Description("Text indexing : Content type: ARTICLE, SHORTTEXT.")
+    @Default.String("ARTICLE")
+    String getContentType();
+    void setContentType(String contentType);
+
+    @Description("Text indexing : Indexing type: TOPSENTIMENTS, FULLINDEX, TEXTENCODING.")
+    @Default.String("FULLINDEX")
+    String getIndexingType();
+    void setIndexingType(String indexingType);
+
+    @Description("Text indexing : Parsing type: DEEP, SHALLOW, DEPENDENCY.")
+    @Default.String("SHALLOW")
+    String getParsingType();
+    void setParsingType(String parsingType);
+
     @Description("Truncate sink BigQuery dataset before writing")
     @Default.Boolean(false)
     Boolean getWriteTruncate();

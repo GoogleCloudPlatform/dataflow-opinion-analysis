@@ -83,7 +83,6 @@ import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineUtils.E
 import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineUtils.ExtractPostDataFn;
 import com.google.cloud.dataflow.examples.opinionanalysis.io.RecordFileSource;
 import com.google.cloud.dataflow.examples.opinionanalysis.model.InputContent;
-import com.google.cloud.dataflow.examples.opinionanalysis.solutions.FileIndexerPipelineOptions;
 import com.google.cloud.dataflow.examples.opinionanalysis.transforms.Reshuffle;
 import com.google.cloud.dataflow.examples.opinionanalysis.util.PartitionedTableRef;
 import com.google.cloud.dataflow.examples.opinionanalysis.util.PipelineTags;
@@ -443,17 +442,21 @@ public class DictionaryBuilderPipeline {
 			ContentIndexSummary summary = null;
 			InputContent ic = null;
 			IndexerPipelineOptions options = c.getPipelineOptions().as(IndexerPipelineOptions.class);
-			IndexingConsts.ContentType contentType = options.getIndexAsShorttext() ? IndexingConsts.ContentType.SHORTTEXT: IndexingConsts.ContentType.ARTICLE;
+
+			//In this pipeline, the Indexing Type is predetermined, because its purpose is to calculate NGrams
+			//IndexingConsts.IndexingType indexingType =  IndexingConsts.IndexingType.valueOf(options.getIndexingType());
+			IndexingConsts.IndexingType indexingType = IndexingConsts.IndexingType.NGRAMSTATS;
+			IndexingConsts.ParseDepth parsingType =  IndexingConsts.ParseDepth.valueOf(options.getParsingType());
+			IndexingConsts.ContentType contentType =  IndexingConsts.ContentType.valueOf(options.getContentType());
 			
 			try {
 				long processingTime = System.currentTimeMillis();
 
 				ic = c.element();
 				
-				contentindex = new ContentIndex(
-					ic.text, IndexingConsts.IndexingType.NGRAMSTATS, 
-					contentType, processingTime);
-				
+				contentindex = new ContentIndex(ic.text, indexingType, contentType, parsingType, processingTime);
+
+				//TODO 2021/2/11: make this a parameter
 				contentindex.NgramMaxN = 5;
 				contentindex.NgramBreakAtPunctuation = true;
 
@@ -534,7 +537,7 @@ public class DictionaryBuilderPipeline {
 					throw new Exception("ParseCSVFile: null raw content");
 				
 				
-				FileIndexerPipelineOptions options = c.getPipelineOptions().as(FileIndexerPipelineOptions.class);
+				IndexerPipelineOptions options = c.getPipelineOptions().as(IndexerPipelineOptions.class);
 				Integer textColumnIdx = options.getTextColumnIdx();
 				Integer collectionItemIdIdx = options.getCollectionItemIdIdx();
 				
@@ -598,7 +601,7 @@ public class DictionaryBuilderPipeline {
 				if (rawInput.isEmpty())
 					throw new Exception("ParseCSVLine: empty raw content or whitespace chars only");
 				
-				FileIndexerPipelineOptions options = c.getPipelineOptions().as(FileIndexerPipelineOptions.class);
+				IndexerPipelineOptions options = c.getPipelineOptions().as(IndexerPipelineOptions.class);
 				Integer textColumnIdx = options.getTextColumnIdx();
 				Integer collectionItemIdIdx = options.getCollectionItemIdIdx();
 				

@@ -12,14 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-PROJECT_ID="replace_with_project_id"
-DATASET_ID="opinions"
-GCS_BUCKET="replace_with_bucket"
-
-
-if [ $# != 5 ]
+if [ $# != 6 ]
 then
-  echo "Invalid number of parameters. Need 5: IndexingType ParsingType ItemIDColumnIdx TextColumnIdx InputFiles"
+  echo "Invalid number of parameters. Need 6: IndexingType ParsingType ContentType ItemIDColumnIdx TextColumnIdx InputFiles"
   exit 1
 else
   if [ "$1" != "FULLINDEX" ] && [ "$1" != "TOPSENTIMENTS" ]
@@ -38,12 +33,25 @@ else
     PARSINGTYPE=$2
   fi
 
-  ITEMIDCOLUMNIDX=$3
-  TEXTCOLUMNIDX=$4
-  INPUTFILES=$5
+  if [ "$3" != "ARTICLE" ] && [ "$3" != "SHORTTEXT" ]
+  then
+    echo "Invalid 3nd parameter value. Use one of {ARTICLE | SHORTTEXT}"
+    exit 1
+  else
+    CONTENTTYPE=$3
+  fi
+
+  ITEMIDCOLUMNIDX=$4
+  TEXTCOLUMNIDX=$5
+  INPUTFILES=$6
 
 fi
 
+EXPERIMENTS="enable_execution_details_collection,use_monitoring_state_manager"
+if [ "$UNSUPPORTED_SDK_OVERRIDE_TOKEN" != "" ]
+then
+  EXPERIMENTS="$EXPERIMENTS,unsupported_sdk_temporary_override_token=$UNSUPPORTED_SDK_OVERRIDE_TOKEN"
+fi
 
 mvn compile exec:java \
 -Dexec.mainClass=com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipeline \
@@ -60,7 +68,9 @@ mvn compile exec:java \
 --inputFile=$INPUTFILES \
 --readAsCSV=true \
 --recordDelimiters=30 \
---indexAsShorttext=true \
+--indexingType=$INDEXINGTYPE \
+--parsingType=$PARSINGTYPE \
+--contentType=$CONTENTTYPE \
 --ratioEnrichWithCNLP=0 \
 --textColumnIdx=$TEXTCOLUMNIDX \
 --collectionItemIdIdx=$ITEMIDCOLUMNIDX \
@@ -68,5 +78,5 @@ mvn compile exec:java \
 --bigQueryDataset=$DATASET_ID \
 --writeTruncate=true \
 --processedUrlHistorySec=130000 \
---experiments=enable_execution_details_collection,use_monitoring_state_manager,unsupported_sdk_temporary_override_token=2021-02-13T19:27:16-08:00:ARR1cwqcRETYoL2BHEANlcbwHUdIoSqVQ7Q53rUVBf8VMdexpeAa00rbZ24BQEsyUu11tAVzQ93FoL9PdPMIpX2Q8j34VQXKbrBJrr_JpheFgUQ0el_fuPs2MZk6a-rRKP6-NmX-LbFEBA \
+--experiments=$EXPERIMENTS \
 --wrSocialCountHistoryWindowSec=610000"

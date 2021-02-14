@@ -5,7 +5,6 @@ bin/
 # Ignore explicitely excluded folders
 unused/
 output/
-scheduler/lib/
 
 # Ignore local versions of scripts
 scripts/*_local.sh
@@ -24,7 +23,6 @@ bigquery/*_local.sh
 .idea/
 .run/
 examples-opinionanalysis.iml
-examples-opinionanalysis (1).iml
 
 # The build process generates the dependency-reduced POM, but it shouldn't be
 # committed.

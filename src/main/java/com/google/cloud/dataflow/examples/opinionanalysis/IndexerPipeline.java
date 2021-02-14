@@ -14,7 +14,9 @@
  * limitations under the License.
  *******************************************************************************/
 package com.google.cloud.dataflow.examples.opinionanalysis;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -59,6 +61,7 @@ import org.apache.beam.sdk.values.PCollectionView;
 import org.apache.beam.sdk.values.TupleTag;
 import org.apache.beam.sdk.values.TupleTagList;
 import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.IOUtils;
 import org.joda.time.Instant;
@@ -74,7 +77,6 @@ import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineUtils.E
 import com.google.cloud.dataflow.examples.opinionanalysis.IndexerPipelineUtils.ExtractPostDataFn;
 import com.google.cloud.dataflow.examples.opinionanalysis.io.RecordFileSource;
 import com.google.cloud.dataflow.examples.opinionanalysis.model.InputContent;
-import com.google.cloud.dataflow.examples.opinionanalysis.solutions.FileIndexerPipelineOptions;
 import com.google.cloud.dataflow.examples.opinionanalysis.transforms.Reshuffle;
 import com.google.cloud.dataflow.examples.opinionanalysis.util.PartitionedTableRef;
 import com.google.cloud.dataflow.examples.opinionanalysis.util.PipelineTags;
@@ -414,7 +416,7 @@ public class IndexerPipeline {
 	}
 
 	/**
-	 * @param Document indexes
+	 * @param indexes
 	 * @return a POJO containing 2 PCollections: Unique docs, and Duplicates
 	 */
 	private static ContentDuplicateOrNot filterSoftDuplicates(
@@ -1002,8 +1004,11 @@ public class IndexerPipeline {
 			ContentIndexSummary summary = null;
 			InputContent ic = null;
 			IndexerPipelineOptions options = c.getPipelineOptions().as(IndexerPipelineOptions.class);
-			IndexingConsts.ContentType contentType = options.getIndexAsShorttext() ? IndexingConsts.ContentType.SHORTTEXT: IndexingConsts.ContentType.ARTICLE;
-			
+
+			IndexingConsts.IndexingType indexingType =  IndexingConsts.IndexingType.valueOf(options.getIndexingType());
+			IndexingConsts.ParseDepth parsingType =  IndexingConsts.ParseDepth.valueOf(options.getParsingType());
+			IndexingConsts.ContentType contentType =  IndexingConsts.ContentType.valueOf(options.getContentType());
+
 			try {
 				long processingTime = System.currentTimeMillis();
 
@@ -1011,8 +1016,9 @@ public class IndexerPipeline {
 				
 				contentindex = new ContentIndex(
 					ic.text, 
-					IndexingConsts.IndexingType.TOPSENTIMENTS,
+					indexingType,
 					contentType,
+					parsingType,
 					processingTime,
 					ic.url,
 					ic.pubTime,
@@ -1101,7 +1107,7 @@ public class IndexerPipeline {
 					throw new Exception("ParseCSVFile: null raw content");
 				
 				
-				FileIndexerPipelineOptions options = c.getPipelineOptions().as(FileIndexerPipelineOptions.class);
+				IndexerPipelineOptions options = c.getPipelineOptions().as(IndexerPipelineOptions.class);
 				Integer textColumnIdx = options.getTextColumnIdx();
 				Integer collectionItemIdIdx = options.getCollectionItemIdIdx();
 				
@@ -1165,7 +1171,7 @@ public class IndexerPipeline {
 				if (rawInput.isEmpty())
 					throw new Exception("ParseCSVLine: empty raw content or whitespace chars only");
 				
-				FileIndexerPipelineOptions options = c.getPipelineOptions().as(FileIndexerPipelineOptions.class);
+				IndexerPipelineOptions options = c.getPipelineOptions().as(IndexerPipelineOptions.class);
 				Integer textColumnIdx = options.getTextColumnIdx();
 				Integer collectionItemIdIdx = options.getCollectionItemIdIdx();
 				
@@ -1229,7 +1235,98 @@ public class IndexerPipeline {
 		
 
 	}
-	
+
+
+
+	static class CreateCSVLineFromIndexSummaryFn extends DoFn<ContentIndexSummary, String> {
+
+		@ProcessElement
+		public void processElement(ProcessContext c) {
+
+			ContentIndexSummary summary = c.element();
+
+			if (summary.sentiments == null)
+				return;
+
+			try {
+
+				StringWriter stringWriter = new StringWriter();
+				CSVPrinter csvPrinter = new CSVPrinter(stringWriter,CSVFormat.DEFAULT);
+
+				for (int i=0; i < summary.sentiments.length; i++)
+				{
+
+					ArrayList<String> linefields = new ArrayList<String>();
+
+					addField(linefields,"RecordID",summary.doc.collectionItemId);
+
+					ArrayList<String> sttags = new ArrayList<>();
+					if (summary.sentiments[i].tags != null)
+						for (int j=0; j < summary.sentiments[i].tags.length; j++)
+							sttags.add(summary.sentiments[i].tags[j].tag);
+
+					addField(linefields,"Tags",sttags.toString()); // will write as [a,b,c]
+
+					addField(linefields,"SentimentHash", summary.sentiments[i].sentimentHash);
+					addField(linefields,"Text", summary.sentiments[i].text);
+					addField(linefields,"LabelledPositions", summary.sentiments[i].labelledPositions);
+					addField(linefields,"AnnotatedText", summary.sentiments[i].annotatedText);
+					addField(linefields,"AnnotatedHtml", summary.sentiments[i].annotatedHtmlText);
+					addField(linefields,"SentimentTotalScore", summary.sentiments[i].sentimentTotalScore);
+					addField(linefields,"DominantValence", summary.sentiments[i].dominantValence.ordinal());
+					addField(linefields,"StAcceptance", summary.sentiments[i].stAcceptance);
+					addField(linefields,"StAnger", summary.sentiments[i].stAnger);
+					addField(linefields,"StAnticipation", summary.sentiments[i].stAnticipation);
+					addField(linefields,"StAmbiguous", summary.sentiments[i].stAmbiguous);
+					addField(linefields,"StDisgust", summary.sentiments[i].stDisgust);
+					addField(linefields,"StFear", summary.sentiments[i].stFear);
+					addField(linefields,"StGuilt", summary.sentiments[i].stGuilt);
+					addField(linefields,"StInterest", summary.sentiments[i].stInterest);
+					addField(linefields,"StJoy", summary.sentiments[i].stJoy);
+					addField(linefields,"StSadness", summary.sentiments[i].stSadness);
+					addField(linefields,"StShame", summary.sentiments[i].stShame);
+					addField(linefields,"StSurprise", summary.sentiments[i].stSurprise);
+					addField(linefields,"StPositive", summary.sentiments[i].stPositive);
+					addField(linefields,"StNegative", summary.sentiments[i].stNegative);
+					addField(linefields,"StSentiment", summary.sentiments[i].stSentiment);
+					addField(linefields,"StProfane", summary.sentiments[i].stProfane);
+					addField(linefields,"StUnsafe", summary.sentiments[i].stUnsafe);
+
+					ArrayList<String> signalsarray = new ArrayList<>();
+					if (summary.sentiments[i].signals != null)
+						for (int j=0; j < summary.sentiments[i].signals.length; j++)
+							signalsarray.add(summary.sentiments[i].signals[j]);
+
+					addField(linefields,"Signals",signalsarray.toString());
+
+					csvPrinter.printRecord(linefields);
+
+					String output = stringWriter.toString().trim(); // need to trim, because printRecord will add the record separator, as will the TextIO.write method at the end of the pipeline
+					csvPrinter.flush(); // will also flush the stringWriter
+
+					c.output(output);
+
+
+				}
+
+				csvPrinter.close();
+			} catch (IOException e) {
+				LOG.warn(e.getMessage());
+			}
+		}
+
+		private void addField(ArrayList<String> fields, String fieldName, String value) {
+			fields.add(value);
+			// TODO: should we quote the string?
+		}
+		private void addField(ArrayList<String> fields, String fieldName, Integer value) {
+			fields.add(value.toString());
+		}
+
+
+	}
+
+
 	/**
 	 * Pipeline step 3
 	 * FormatAsTableRowFn - a DoFn for converting a sentiment summary into a BigQuery WebResources record

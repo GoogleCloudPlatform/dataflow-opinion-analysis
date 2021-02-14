@@ -70,7 +70,7 @@ Create and setup a Cloud Storage bucket and Cloud Pub/Sub topics
 
 * Create folders in this bucket `staging`, `input`, `output`, `temp`
 
-* [Create](https://console.cloud.google.com/cloudpubsub/topicList) the following Pub/Sub topic: `documents`
+* (Optional) [Create](https://console.cloud.google.com/cloudpubsub/topicList) the following Pub/Sub topic: `documents`
 
 Create or verify a configuration for your project
 
@@ -104,14 +104,37 @@ Go to the `dataflow-opinion-analysis` directory. The exact path depends on where
 cd dataflow-opinion-analysis
 ```
 
+### Activate gcloud configuration and set environment variables
+
+Do this step before creating the BigQuery dataset and before running your demo Dataflow jobs every time you open a new shell. 
+
+* Activate the gcloud configuration for the project where your BigQuery dataset and your Dataflow jobs are or should be located
+
+```
+gcloud config configurations activate <config-name>
+```
+
+* [One Time Task] Go to the `dataflow-opinion-analysis/scripts` directory and make a copy of the `set_env_vars_template.sh` file
+
+```
+cd scripts
+cp set_env_vars_template.sh set_env_vars_local.sh
+chmod +x *.sh
+```
+
+* [One Time Task] Edit the `set_env_vars_local.sh` file in your favorite text editor, e.g. `nano`. Specifically, set the values of the variables used for parametarizing your Dataflow pipeline. Set the values of the DATASET_ID, GCS_BUCKET and other variables at the beginning of the shell script. Note that the UNSUPPORTED_SDK_OVERRIDE_TOKEN variable should only be set once you have a real token to replace it with (see below for more info).
+
+* Set environment variables for the rest of your shell session
+
+Don't miss the dot at the beginning of this command!
+
+```
+. scripts/set_env_vars_local.sh
+```
 
 ### Create the BigQuery dataset
 
-* Make sure you've activated the gcloud configuration for the project where you want to create your BigQuery dataset
-
-  `gcloud config configurations activate <config-name>`
-
-* In shell, go to the `bigquery` directory where the build scripts and schema files for BigQuery tables and views are located
+* Go to the `bigquery` directory where the build scripts and schema files for BigQuery tables and views are located
 
   `cd bigquery`
 
@@ -174,24 +197,28 @@ You can use the included news articles (from Google's blogs) and movie reviews i
 
 We will run a demo job that processes movie reviews in CSV format. 
 
-* Go to the `dataflow-opinion-analysis/scripts` directory and make a copy of the `run_indexer_csv_template.sh` file
-
-```
-cd scripts
-cp run_indexer_csv_template.sh run_indexer_csv_local.sh
-```
-
-* Edit the `run_indexer_csv_local.sh` file in your favorite text editor, e.g. `nano`. Specifically, set the values of the variables used for parametarizing your control Dataflow pipeline. Set the values of the PROJECT_ID, DATASET_ID, GCS_BUCKET and other variables at the beginning of the shell script.
-
 * Go back to the `dataflow-opinion-analysis` directory and run a command to deploy the control Dataflow pipeline to Cloud Dataflow. 
 
 ```
-run_indexer_csv_local.sh FULLINDEX SHALLOW 1 2 gs://$GCS_BUCKET/input/kaggle-rotten-tomato/*.csv
+scripts/run_indexer_gcs_csv_to_bigquery.sh FULLINDEX SHALLOW SHORTTEXT 1 2 gs://$GCS_BUCKET/input/kaggle-rotten-tomato/*.csv
 ```
+
+* (First Time Only) The first time you run the job, you will get an error from Dataflow 
+
+```The workflow was automatically rejected by the service because it uses an unsupported SDK Google Cloud Dataflow SDK for Java 2.2.0. Please upgrade to the latest SDK version. To override the SDK version check temporarily, please provide an override token using the experiment flag '--experiments=unsupported_sdk_temporary_override_token=<token>'. Note that this token expires on <date>.```
+
+This is because we are still working on upgrading our Beam dependecies to newer versions of Beam. To fix this error, modify your scripts/set_env_vars_local.sh script to set the UNSUPPORTED_SDK_OVERRIDE_TOKEN to the token that was returned. 
+
+Set the shell variables again.
+```
+. scripts/set_env_vars_local.sh
+```
+
+Resubmit the job.
   
 * In the [Dataflow Console](https://console.cloud.google.com/dataflow) observe how a new input job is created. 
 
-* Once the Dataflow job successfully finishes, you can review the data it will write into your target BigQuery dataset. Use the [BigQuery console](https://bigquery.cloud.google.com/) to review the dataset.
+* Once the Dataflow job successfully finishes, you can review the data it will write into your target BigQuery dataset. Use the [BigQuery console](https://console.cloud.google.com/bigquery) to review the dataset.
 
 * Enter the following query to list new documents that were indexed by the Dataflow job. The sample query is using the Standard SQL dialect of BigQuery.
 
@@ -201,11 +228,21 @@ SELECT d.CollectionItemId, s.*
 FROM opinions.sentiment s
     INNER JOIN opinions.document d ON d.DocumentHash = s.DocumentHash
 WHERE SentimentTotalScore > 0
-ORDER BY SentimentTotalScore DESC
-LIMIT 1000
+ORDER BY ProcessingDateId DESC, SentimentTotalScore DESC
+LIMIT 1000;
 
 ```
 
+### Issues Under Investigation
+
+* Writing to BigQuery does not truncate existing content, even if --writeTruncate=true is specified
+This is because the BigQuery tables are defined as partitioned tables. The workaround for truncating the content between job runs is to run the following script
+
+```
+DELETE FROM opinions.document WHERE 1=1;
+DELETE FROM opinions.sentiment WHERE 1=1;
+DELETE FROM opinions.webresource WHERE 1=1;
+``` 
 
 ### Clean up
 
